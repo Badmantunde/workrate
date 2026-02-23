@@ -11,7 +11,7 @@
 #   workrate-api/           ← deployed separately on Railway (not here)
 
 [build]
-  command = "sh workrate-netlify/build.sh"
+  command = "sh build.sh"
   publish = "workrate-dashboard/dist"
 
 # ── Landing page: copy it into the build output ────────────────────────
