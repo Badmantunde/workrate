@@ -370,17 +370,20 @@ function Heatmap({data}){
    CONTEXT SWITCH GRAPH
 ═══════════════════════════════════════════════════════════════════════════ */
 function ContextSwitchGraph({sessions}){
-  const max=Math.max(...sessions.map(s=>s.switches),1);
+  const list = sessions.slice(0,6);
+  const max = list.length ? Math.max(...list.map(s=>s.switches??s.unregisteredTabSwitches??0),1) : 1;
   return(
     <div>
       <div style={{display:"flex",gap:8,alignItems:"flex-end",height:72}}>
-        {sessions.slice(0,6).map((s,i)=>(
+        {list.map((s,i)=>{
+          const sw = s.switches ?? s.unregisteredTabSwitches ?? 0;
+          return (
           <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-            <span style={{fontSize:10,fontWeight:500,color:s.switches>7?C.danger:s.switches>4?C.warn:C.accent}}>{s.switches}</span>
-            <div style={{width:"100%",height:Math.max(4,(s.switches/max)*52),background:s.switches>7?C.danger:s.switches>4?C.warn:C.accentBorder,borderRadius:"3px 3px 0 0",transition:"height .4s"}}/>
+            <span style={{fontSize:10,fontWeight:500,color:sw>7?C.danger:sw>4?C.warn:C.accent}}>{sw}</span>
+            <div style={{width:"100%",height:Math.max(4,(sw/max)*52),background:sw>7?C.danger:sw>4?C.warn:C.accentBorder,borderRadius:"3px 3px 0 0",transition:"height .4s"}}/>
             <span style={{fontSize:9,color:C.muted,textAlign:"center",maxWidth:40,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{s.date}</span>
           </div>
-        ))}
+        );})}
       </div>
       <div style={{display:"flex",gap:14,marginTop:12,fontSize:11}}>
         {[[C.accent,"Low (≤4)"],[C.warn,"Medium (5–7)"],[C.danger,"High (8+)"]].map(([c,l])=>(
@@ -619,8 +622,9 @@ function AdjustTimeModal({session,onClose,onSave,onToast}){
 /* ═══════════════════════════════════════════════════════════════════════════
    NEW SESSION MODAL
 ═══════════════════════════════════════════════════════════════════════════ */
-function NewSessionModal({onClose,onSave}){
-  const [form,setForm]=useState({task:"",client:CLIENTS_LIST[0],tags:[],start:nowStr(),end:"",notes:""});
+function NewSessionModal({onClose,onSave,clients}){
+  const clientOpts = Array.isArray(clients) && clients.length ? clients : CLIENTS_LIST;
+  const [form,setForm]=useState({task:"",client:clientOpts[0]||"",tags:[],start:nowStr(),end:"",notes:""});
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
   const addTag=(t)=>{if(t&&!form.tags.includes(t))set("tags",[...form.tags,t]);};
   const submit=()=>{
@@ -629,7 +633,7 @@ function NewSessionModal({onClose,onSave}){
     const [eh,em]=(form.end||"00:00").split(":").map(Number);
     const dur=form.end?Math.max(0,((eh*60+em)-(sh*60+sm))*60):3600;
     const wqi=rand(68,96);
-    onSave({id:Date.now(),date:"Today",task:form.task,client:form.client,
+    onSave({id:Date.now(),date:"Today",task:form.task,client:form.client||"—",
       start:form.start,end:form.end||"—",duration:dur,
       wqi,switches:rand(1,8),idle:rand(3,18),tags:form.tags,approved:false,shared:false});
     onClose();
@@ -643,7 +647,7 @@ function NewSessionModal({onClose,onSave}){
       </div>
       <Field label="Client">
         <select style={inp} value={form.client} onChange={e=>set("client",e.target.value)}>
-          {CLIENTS_LIST.map(c=><option key={c}>{c}</option>)}
+          {clientOpts.map(c=><option key={c}>{c}</option>)}
         </select>
       </Field>
       <Field label="Tags">
@@ -765,9 +769,10 @@ function DeepWorkModal({active,onToggle,onClose}){
 /* ═══════════════════════════════════════════════════════════════════════════
    PROFILE DRAWER
 ═══════════════════════════════════════════════════════════════════════════ */
-function ProfileDrawer({onClose,onToast}){
-  const [name,setName]=useState("Alex Rivera");
-  const [email,setEmail]=useState("alex@designco.io");
+function ProfileDrawer({onClose,onToast,currentUser,onLogout}){
+  const displayName = currentUser?.name || currentUser?.email?.split("@")[0] || "";
+  const [name,setName]=useState(displayName||"");
+  const [email,setEmail]=useState(currentUser?.email||"");
   const [rate,setRate]=useState(95);
   const save=()=>{onToast("Profile updated");onClose();};
   return(
@@ -781,12 +786,12 @@ function ProfileDrawer({onClose,onToast}){
         </div>
         <div style={{padding:24,flex:1}}>
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}>
-            <div style={{width:60,height:60,borderRadius:"50%",background:`linear-gradient(135deg,${C.accent},#0D5535)`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:22,fontWeight:700,marginBottom:10}}>{name.charAt(0)}</div>
-            <div style={{fontSize:14,fontWeight:600,color:C.text}}>{name}</div>
+            <div style={{width:60,height:60,borderRadius:"50%",background:`linear-gradient(135deg,${C.accent},#0D5535)`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:22,fontWeight:700,marginBottom:10}}>{(name||displayName).charAt(0)||"?"}</div>
+            <div style={{fontSize:14,fontWeight:600,color:C.text}}>{name||displayName||"User"}</div>
             <div style={{fontSize:12,color:C.muted,marginTop:2}}>Pro plan · Active</div>
           </div>
-          <Field label="Display name"><input style={inp} value={name} onChange={e=>setName(e.target.value)}/></Field>
-          <Field label="Email"><input style={inp} value={email} onChange={e=>setEmail(e.target.value)}/></Field>
+          <Field label="Display name"><input style={inp} value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/></Field>
+          <Field label="Email"><input style={inp} value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></Field>
           <Field label="Default hourly rate ($)"><input style={inp} type="number" value={rate} onChange={e=>setRate(+e.target.value)}/></Field>
           {onLogout&&(
             <div style={{marginTop:16,paddingTop:16,borderTop:`1px solid ${C.borderLight}`}}>
@@ -1051,9 +1056,11 @@ function TimerPanel({running,elapsed,onToggle,task,setTask}){
    ANALYTICS METRICS ROW (from spec §8)
 ═══════════════════════════════════════════════════════════════════════════ */
 function AnalyticsMetrics({sessions}){
-  const totalDur  = sessions.reduce((a,s)=>a+s.duration,0);
-  const avgSession= sessions.length?totalDur/sessions.length:0;
-  const focusSess = sessions.filter(s=>s.idle<10).length;
+  const dur = s => s.verifiedSec ?? s.duration ?? 0;
+  const idlePct = s => s.idlePct ?? s.idle ?? 0;
+  const totalDur  = sessions.reduce((a,s)=>a+dur(s),0);
+  const avgSession= sessions.length ? totalDur/sessions.length : 0;
+  const focusSess = sessions.filter(s=>idlePct(s)<10).length;
   const focusRatio= pct(focusSess,sessions.length);
   const approved  = sessions.filter(s=>s.approved).length;
   const approvalR = pct(approved,sessions.filter(s=>s.shared).length||1);
@@ -1375,12 +1382,17 @@ export default function WorkRate({
     if (initialSessions.length > 0) setSessions(initialSessions);
   }, [initialSessions]);
   const [filter,setFilter]   =useState("All time");
-  const FILTERS=["All time","Today","This week","Volta Studio","Melon Co.","Orbit Labs"];
-  const filtered=sessions.filter(s=>{
-    if(filter==="All time")  return true;
-    if(filter==="Today")     return s.date==="Today";
-    if(filter==="This week") return ["Today","Yesterday","Feb 21","Feb 20"].includes(s.date);
-    return s.client===filter;
+  // Build client filter list from API clients + unique session clients
+  const clientNamesFromApi = (serverClients ?? []).map(c => (typeof c === "string" ? c : c?.name)).filter(Boolean);
+  const clientNamesFromSessions = [...new Set(sessions.map(s => s.client).filter(Boolean))];
+  const allClientNames = [...new Set([...clientNamesFromApi, ...clientNamesFromSessions])].sort();
+  const FILTERS = ["All time", "Today", "This week", ...allClientNames];
+  const weekAgo = Date.now() - 7 * 86400000;
+  const filtered = sessions.filter(s => {
+    if (filter === "All time") return true;
+    if (filter === "Today") return s.date === "Today" || (s.sessionStart && new Date(s.sessionStart).toDateString() === new Date().toDateString());
+    if (filter === "This week") return s.date === "Today" || s.date === "Yesterday" || (s.sessionStart && new Date(s.sessionStart) >= weekAgo);
+    return s.client === filter;
   });
 
   /* ── Modals ── */
@@ -1463,11 +1475,11 @@ export default function WorkRate({
 
       {/* ── Modals ── */}
       {modal==="aiSummary"  && aiSummary && <AISummaryModal summary={aiSummary} task={task} onClose={closeModal} onInvoice={()=>{setModalTarget(sessions[0]);setModal("invoice");}} onSave={()=>{addSession({id:Date.now(),date:"Today",task:task||"Untitled session",start:"—",end:"—",duration:aiSummary.total*3600,wqi:aiSummary.wqi,switches:aiSummary.switches,idle:aiSummary.idleRatio,tags:[],client:"Volta Studio",approved:false,shared:false});setTask("");}}/>}
-      {modal==="newSession" && <NewSessionModal onClose={closeModal} onSave={addSession}/>}
+      {modal==="newSession" && <NewSessionModal onClose={closeModal} onSave={addSession} clients={allClientNames.length ? allClientNames : CLIENTS_LIST}/>}
       {modal==="invoice"    && modalTarget && <InvoiceModal session={modalTarget} onClose={closeModal} onToast={showToast}/>}
       {modal==="export"     && modalTarget && <ExportModal  session={modalTarget} onClose={closeModal} onToast={showToast}/>}
       {modal==="adjust"     && modalTarget && <AdjustTimeModal session={modalTarget} onClose={closeModal} onSave={adjustSession} onToast={showToast}/>}
-      {modal==="profile"    && <ProfileDrawer onClose={closeModal} onToast={showToast}/>}
+      {modal==="profile"    && <ProfileDrawer onClose={closeModal} onToast={showToast} currentUser={currentUser} onLogout={onLogout}/>}
       {modal==="deepWork"   && <DeepWorkModal active={deepWork} onToggle={()=>setDeepWork(d=>!d)} onClose={closeModal}/>}
       {modal==="subscription"&&<SubscriptionModal onClose={closeModal} onToast={showToast}/>}
 
@@ -1532,9 +1544,12 @@ export default function WorkRate({
               <span style={{fontSize:13,fontWeight:600,color:C.accent,fontVariantNumeric:"tabular-nums"}}>{fmt(elapsed)}</span>
             </div>
           )}
+          {onRefresh&&(
+            <button onClick={onRefresh} title="Refresh data" style={{padding:"6px 10px",borderRadius:8,border:`1px solid ${C.border}`,background:"transparent",color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>↻ Refresh</button>
+          )}
           <div onClick={()=>setModal("profile")}
             style={{width:30,height:30,borderRadius:"50%",background:`linear-gradient(135deg,${C.accent},#0D5535)`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>
-            {role==="admin"?"⚙":role==="client"?"C":"A"}
+            {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : role==="admin"?"⚙":role==="client"?"C":"A"}
           </div>
         </div>
       </header>
@@ -1551,17 +1566,27 @@ export default function WorkRate({
         {/* ══ FREELANCER: OVERVIEW ══ */}
         {tab==="dashboard"&&(
           <div style={{display:"flex",flexDirection:"column",gap:22}}>
+            {(()=>{
+              const todaySec = serverStats?.todayVerifiedSec ?? sessions.filter(s=>s.date==="Today"||(s.sessionStart&&new Date(s.sessionStart).toDateString()===new Date().toDateString())).reduce((a,s)=>a+(s.verifiedSec??s.duration??0),0);
+              const weekSec = serverStats?.weekVerifiedSec ?? sessions.filter(s=>s.date==="Today"||s.date==="Yesterday"||(s.sessionStart&&new Date(s.sessionStart)>=weekAgo)).reduce((a,s)=>a+(s.verifiedSec??s.duration??0),0);
+              const avgWqi = serverStats?.avgWqi ?? (sessions.length ? Math.round(sessions.reduce((a,s)=>a+(s.wqi??0),0)/sessions.length) : 0);
+              const activeDays = serverStats?.activeDays ?? 0;
+              const greeting = (()=>{ const h=new Date().getHours(); return h<12?"Good morning":h<18?"Good afternoon":"Good evening"; })();
+              const userName = currentUser?.name || currentUser?.email?.split("@")[0] || "there";
+              const dateLine = new Date().toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"}) + (activeDays ? ` · ${activeDays} active day${activeDays!==1?"s":""} 🔥` : "");
+              return (
+            <>
             <div>
-              <h1 style={{fontSize:24,fontWeight:600,letterSpacing:"-0.03em",color:C.text}}>Good afternoon, Alex</h1>
-              <p style={{fontSize:13,color:C.sub,marginTop:5}}>Monday, Feb 23 · Week 8 · 12-day streak 🔥</p>
+              <h1 style={{fontSize:24,fontWeight:600,letterSpacing:"-0.03em",color:C.text}}>{greeting}, {userName}</h1>
+              <p style={{fontSize:13,color:C.sub,marginTop:5}}>{dateLine}</p>
             </div>
 
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
               {[
-                {l:"Today",v:"5.3h",n:"↑ 0.8h above avg",onClick:()=>{setFilter("Today");setTab("sessions");}},
-                {l:"This week",v:"38.2h",n:"$3,820 billable",onClick:()=>{setFilter("This week");setTab("sessions");}},
-                {l:"Avg WQI",v:"84",n:"Top 12% globally",onClick:()=>setTab("analytics")},
-                {l:"Streak",v:"12 days",n:"Personal best 🎉",onClick:()=>setTab("badges")},
+                {l:"Today",v:`${fmtHr(todaySec)}h`,n:sessions.length?"Verified time":"Add sessions to see stats",onClick:()=>{setFilter("Today");setTab("sessions");}},
+                {l:"This week",v:`${fmtHr(weekSec)}h`,n:sessions.length?"Last 7 days":"—",onClick:()=>{setFilter("This week");setTab("sessions");}},
+                {l:"Avg WQI",v:avgWqi?String(avgWqi):"—",n:avgWqi?wqiLabel(avgWqi):"—",onClick:()=>setTab("analytics")},
+                {l:"Active days",v:activeDays?String(activeDays):"—",n:"Days with sessions",onClick:()=>setTab("badges")},
               ].map(m=>(
                 <div key={m.l} onClick={m.onClick} style={{...card,padding:"18px 22px",cursor:"pointer",transition:"border-color .15s"}}
                   onMouseEnter={e=>e.currentTarget.style.borderColor=C.accentBorder}
@@ -1617,12 +1642,15 @@ export default function WorkRate({
                         <div style={{fontSize:13,fontWeight:500,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{s.task}</div>
                         <div style={{fontSize:11,color:C.muted,marginTop:1}}>{s.date} · {s.client}</div>
                       </div>
-                      <div style={{fontSize:13,fontWeight:600,color:C.text}}>{fmtHr(s.duration)}h</div>
+                      <div style={{fontSize:13,fontWeight:600,color:C.text}}>{fmtHr(s.verifiedSec??s.duration)}h</div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
+          </>
+          );
+          })()}
           </div>
         )}
 

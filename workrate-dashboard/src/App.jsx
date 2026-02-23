@@ -45,9 +45,12 @@ export default function App() {
         getSessionStats(),
         getClients(),
       ]);
-      setSessions(sessRes?.sessions  ?? []);
-      setStats(statsRes             ?? {});
-      setClients(clientRes?.clients  ?? []);
+      // Normalize API sessions to dashboard shape (client, duration, etc.)
+      const raw = sessRes?.sessions ?? [];
+      const normalized = raw.map((s) => normalizeSession(s));
+      setSessions(normalized);
+      setStats(statsRes ?? {});
+      setClients(clientRes?.clients ?? []);
     } catch (err) {
       console.error('[App] load failed:', err.message);
       setApiError(err.message);
@@ -70,16 +73,39 @@ export default function App() {
   }
 
   /* ── Session CRUD — passed to WorkRate component ── */
+  function normalizeSession(sess) {
+    if (!sess) return sess;
+    return {
+      ...sess,
+      client:   sess.clientName ?? sess.client ?? '—',
+      duration: sess.verifiedSec ?? sess.duration ?? 0,
+      idle:     sess.idlePct ?? sess.idle ?? 0,
+      switches: sess.unregisteredTabSwitches ?? sess.registeredTabSwitches ?? sess.switches ?? 0,
+    };
+  }
+
   async function handleAddSession(s) {
+    // API expects sessionStart, sessionEnd (ISO). Build from start/end (HH:MM) and today.
+    const today = new Date().toISOString().slice(0, 10);
+    const [sh, sm] = (s.start || "00:00").split(":").map(Number);
+    const durationSec = s.duration ?? s.verifiedSec ?? 3600;
+    const sessionStart = new Date(new Date(today).setHours(sh, sm || 0, 0, 0));
+    const sessionEnd = new Date(sessionStart.getTime() + durationSec * 1000);
+    const payload = {
+      ...s,
+      sessionStart: sessionStart.toISOString(),
+      sessionEnd: sessionEnd.toISOString(),
+      verifiedSec: durationSec,
+      client: s.client || null,
+    };
     try {
-      const res = await createSession(s);
-      const saved = res?.session ?? s;
+      const res = await createSession(payload);
+      const saved = normalizeSession(res?.session ?? s);
       setSessions(prev => [saved, ...(prev ?? [])]);
       return saved;
     } catch (err) {
       console.error('[addSession]', err.message);
-      // Optimistic fallback — show locally even if server failed
-      setSessions(prev => [s, ...(prev ?? [])]);
+      setSessions(prev => [normalizeSession(s), ...(prev ?? [])]);
     }
   }
 
@@ -100,11 +126,11 @@ export default function App() {
         notes: updated.notes,
         tags:  updated.tags,
       });
-      const saved = res?.session ?? updated;
+      const saved = normalizeSession(res?.session ?? updated);
       setSessions(prev => prev?.map(s => s.id === saved.id ? saved : s));
     } catch (err) {
       console.error('[adjustSession]', err.message);
-      setSessions(prev => prev?.map(s => s.id === updated.id ? updated : s));
+      setSessions(prev => prev?.map(s => s.id === updated.id ? normalizeSession(updated) : s));
     }
   }
 
