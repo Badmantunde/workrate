@@ -11,9 +11,7 @@
 #   workrate-api/           ← deployed separately on Railway (not here)
 
 [build]
-  # Build the React dashboard
-  base    = "workrate-dashboard"
-  command = "npm install && npm run build"
+  command = "sh workrate-netlify/build.sh"
   publish = "workrate-dashboard/dist"
 
 # ── Landing page: copy it into the build output ────────────────────────
