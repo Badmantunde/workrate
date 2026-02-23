@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WorkRate</title>
+  <link rel="stylesheet" href="popup.css"/>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══ HEADER ══ -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+          <rect x="1" y="6" width="2" height="7" rx="1" fill="white" opacity=".65"/>
+          <rect x="4.5" y="3" width="2" height="10" rx="1" fill="white" opacity=".8"/>
+          <rect x="8" y="1" width="2" height="12" rx="1" fill="white"/>
+          <rect x="11.5" y="4" width="2" height="9" rx="1" fill="white" opacity=".7"/>
+        </svg>
+      </div>
+      <span class="logo-text">WorkRate</span>
+    </div>
+    <div class="header-right">
+      <button class="icon-btn" id="deepWorkBtn" title="Deep Work Mode">◈</button>
+      <button class="icon-btn" id="settingsBtn" title="Settings">⚙</button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════
+       VIEW: SETUP  (before session starts)
+       Step 1 → register tabs, Step 2 → start
+  ══════════════════════════════════════════════ -->
+  <div id="view-setup" class="view active">
+
+    <!-- Task info -->
+    <div class="section">
+      <div class="section-label">Task</div>
+      <input id="taskInput"   class="field-input" type="text" placeholder="What are you working on?"/>
+      <input id="clientInput" class="field-input mt6" type="text" placeholder="Client (optional)"/>
+    </div>
+
+    <!-- Tags -->
+    <div class="section">
+      <div class="section-label">Tags</div>
+      <div class="tags-list" id="tagsList"></div>
+      <div class="tag-options" id="tagOptions">
+        <button class="tag-opt" data-tag="Design">Design</button>
+        <button class="tag-opt" data-tag="React">React</button>
+        <button class="tag-opt" data-tag="Backend">Backend</button>
+        <button class="tag-opt" data-tag="Node">Node</button>
+        <button class="tag-opt" data-tag="Meeting">Meeting</button>
+        <button class="tag-opt" data-tag="Research">Research</button>
+        <button class="tag-opt" data-tag="Writing">Writing</button>
+        <button class="tag-opt" data-tag="DevOps">DevOps</button>
+      </div>
+    </div>
+
+    <!-- ── Registered tabs ── -->
+    <div class="section">
+      <div class="section-label-row">
+        <div class="section-label">Project tabs
+          <span class="req-badge">required</span>
+        </div>
+        <span class="hint-text">Only these tabs count</span>
+      </div>
+
+      <!-- Registered list -->
+      <div id="registeredList" class="registered-list empty">
+        <div class="empty-tabs">
+          No tabs registered yet.<br/>Add the tabs you'll work in below.
+        </div>
+      </div>
+
+      <!-- Add tab buttons -->
+      <div class="add-tabs-row">
+        <button class="btn-add-tab" id="addCurrentTabBtn">
+          + Add current tab
+        </button>
+        <button class="btn-add-tab-secondary" id="browseTabsBtn">
+          Browse open tabs
+        </button>
+      </div>
+    </div>
+
+    <!-- Browse tabs picker (hidden by default) -->
+    <div id="tabPicker" class="tab-picker hidden">
+      <div class="tab-picker-header">
+        <span class="section-label" style="margin:0">Open tabs</span>
+        <button class="close-picker" id="closePickerBtn">×</button>
+      </div>
+      <div id="openTabsList" class="open-tabs-list"></div>
+    </div>
+
+    <!-- Error message -->
+    <div id="setupError" class="error-banner hidden"></div>
+
+    <!-- Start button -->
+    <button class="btn-start-session" id="startSessionBtn" disabled>
+      ▶ Start verified session
+    </button>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       VIEW: TRACKING  (session in progress)
+  ══════════════════════════════════════════════ -->
+  <div id="view-tracking" class="view">
+
+    <!-- Status pill: what is happening RIGHT NOW -->
+    <div class="status-pill" id="statusPill">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Initialising…</span>
+    </div>
+
+    <!-- ── Dual timer display ── -->
+    <div class="timer-block">
+      <!-- VERIFIED time — the number that matters -->
+      <div class="timer-main">
+        <div class="timer-label accent">Verified time</div>
+        <div class="timer-value accent" id="verifiedDisplay">00:00:00</div>
+      </div>
+      <!-- Wall clock — total elapsed -->
+      <div class="timer-divider"></div>
+      <div class="timer-sub">
+        <div class="timer-label muted">Wall clock</div>
+        <div class="timer-value muted" id="wallDisplay">00:00:00</div>
+      </div>
+    </div>
+
+    <!-- ── Active tab indicator ── -->
+    <div class="tab-status-bar" id="tabStatusBar">
+      <div class="tab-status-icon" id="tabStatusIcon">◎</div>
+      <div class="tab-status-text">
+        <div class="tab-status-domain" id="tabStatusDomain">—</div>
+        <div class="tab-status-sub"   id="tabStatusSub">Checking tab…</div>
+      </div>
+    </div>
+
+    <!-- ── Live breakdown ── -->
+    <div class="breakdown-row">
+      <div class="breakdown-card verified">
+        <div class="bk-val" id="bkVerifiedPct">—</div>
+        <div class="bk-lbl">Verified</div>
+      </div>
+      <div class="breakdown-card off-tab">
+        <div class="bk-val" id="bkOffTabPct">—</div>
+        <div class="bk-lbl">Off-tab</div>
+      </div>
+      <div class="breakdown-card idle">
+        <div class="bk-val" id="bkIdlePct">—</div>
+        <div class="bk-lbl">Idle</div>
+      </div>
+      <div class="breakdown-card wqi">
+        <div class="bk-val" id="bkWqi">—</div>
+        <div class="bk-lbl">WQI</div>
+      </div>
+    </div>
+
+    <!-- ── Registered tabs (mini list, read-only) ── -->
+    <div class="registered-mini" id="registeredMini"></div>
+
+    <!-- ── Mini heatmap ── -->
+    <div class="heatmap-wrap">
+      <div class="section-label">Project tab activity — today</div>
+      <div class="mini-heatmap" id="miniHeatmap"></div>
+      <div class="heatmap-legend">
+        <span>Less</span>
+        <div class="leg-cell" style="background:rgba(27,122,80,.12)"></div>
+        <div class="leg-cell" style="background:rgba(27,122,80,.32)"></div>
+        <div class="leg-cell" style="background:rgba(27,122,80,.58)"></div>
+        <div class="leg-cell" style="background:rgba(27,122,80,.84)"></div>
+        <span>More</span>
+        <span class="leg-sep">|</span>
+        <div class="leg-cell" style="background:rgba(184,82,14,.25)"></div>
+        <span style="color:var(--warn)">Off-tab</span>
+        <div class="leg-cell" style="background:rgba(190,26,26,.15)"></div>
+        <span style="color:var(--danger)">Idle</span>
+      </div>
+    </div>
+
+    <!-- ── Off-tab log (collapsible) ── -->
+    <details class="off-tab-log" id="offTabLog">
+      <summary>Off-tab excursions <span id="offTabCount" class="count-badge">0</span></summary>
+      <div id="offTabList" class="off-tab-list">
+        <div class="empty-state">None yet — great focus!</div>
+      </div>
+    </details>
+
+    <!-- ── Controls ── -->
+    <div class="tracking-controls">
+      <button class="btn-adjust-sm" id="adjustBtn" title="Adjust verified time">✎ Adjust</button>
+      <button class="btn-stop" id="stopBtn">⏹ Stop &amp; save</button>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       VIEW: ADJUST TIME
+  ══════════════════════════════════════════════ -->
+  <div id="view-adjust" class="view">
+    <div class="view-header">
+      <button class="back-btn" id="adjustBackBtn">← Back</button>
+      <span class="view-title">Adjust verified time</span>
+    </div>
+    <div class="warn-banner">
+      ⚠ Adjustments are logged for full transparency. A reason is required and visible to clients.
+    </div>
+    <div class="form-body">
+      <label class="field-label">New verified duration (minutes)</label>
+      <input type="number" id="adjustMinutes" class="field-input" min="0" placeholder="e.g. 45"/>
+      <label class="field-label mt10">Reason for adjustment *</label>
+      <textarea id="adjustReason" class="field-textarea" placeholder="e.g. Timer kept running during a call I forgot to pause…"></textarea>
+      <button class="btn-primary full-width mt10" id="adjustSaveBtn">Save adjustment</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       VIEW: SESSIONS
+  ══════════════════════════════════════════════ -->
+  <div id="view-sessions" class="view">
+    <div class="view-header">
+      <span class="view-title">Recent sessions</span>
+      <button class="text-btn-danger" id="clearSessionsBtn">Clear all</button>
+    </div>
+    <div id="sessionsList" class="sessions-list">
+      <div class="empty-state">No sessions yet. Start your first timer!</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       VIEW: SETTINGS
+  ══════════════════════════════════════════════ -->
+  <div id="view-settings" class="view">
+    <div class="view-header">
+      <button class="back-btn" id="settingsBackBtn">← Back</button>
+      <span class="view-title">Settings</span>
+    </div>
+    <div class="settings-body">
+
+      <!-- ── Account ───────────────────────────── -->
+      <div id="authSection">
+
+        <!-- Logged OUT -->
+        <div id="authLoggedOut">
+          <div class="auth-header">
+            <div class="setting-label">WorkRate account</div>
+            <div class="setting-desc">Log in to sync sessions to the dashboard and share them with clients.</div>
+          </div>
+          <input type="email"    id="loginEmail"    class="field-input mt6" placeholder="Email" autocomplete="email"/>
+          <input type="password" id="loginPassword" class="field-input mt6" placeholder="Password" autocomplete="current-password"/>
+          <div id="loginError" class="auth-error hidden"></div>
+          <button class="btn-primary full-width mt6" id="loginBtn">Log in</button>
+          <div class="auth-signup-hint">No account? <a href="https://workrate.io/register" target="_blank">Sign up free ↗</a></div>
+        </div>
+
+        <!-- Logged IN -->
+        <div id="authLoggedIn" class="hidden">
+          <div class="setting-row" style="align-items:flex-start">
+            <div class="setting-info">
+              <div class="setting-label" id="authEmail">—</div>
+              <div class="setting-desc" id="authPlan">—</div>
+            </div>
+            <button class="btn-adjust-sm" id="logoutBtn">Log out</button>
+          </div>
+          <!-- Offline queue banner -->
+          <div id="syncBanner" class="sync-banner hidden">
+            <span id="syncBannerText">— sessions waiting to sync</span>
+            <button id="syncNowBtn" class="btn-sync-now">Sync now</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="setting-divider"></div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Deep Work Mode</div>
+          <div class="setting-desc">Block distracting sites while tracking</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="deepWorkToggle"/>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Keep tabs between sessions</div>
+          <div class="setting-desc">Registered tabs persist to next session</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="persistTabsToggle" checked/>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row col">
+        <div class="setting-label">Default client</div>
+        <input type="text" id="defaultClient" class="field-input mt6" placeholder="e.g. Volta Studio"/>
+      </div>
+
+      <div class="setting-row col">
+        <div class="setting-label">Keyboard shortcut</div>
+        <div class="setting-desc">Alt + Shift + T — toggle timer</div>
+      </div>
+
+      <div class="setting-divider"></div>
+
+      <div class="setting-row col">
+        <div class="setting-label">Open dashboard</div>
+        <a href="https://workrate.io/dashboard" target="_blank" class="btn-primary mt6"
+           style="display:block;text-align:center;text-decoration:none;padding:9px;">
+          workrate.io ↗
+        </a>
+      </div>
+
+      <div class="setting-row col" style="margin-top:8px">
+        <div class="setting-label" style="color:var(--danger)">Danger zone</div>
+        <button class="btn-danger full-width mt6" id="clearAllBtn">Clear all local data</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ BOTTOM NAV ══ -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-view="setup" id="navSetup">
+      <span class="nav-icon">⏱</span><span>Timer</span>
+    </button>
+    <button class="nav-btn" data-view="sessions" id="navSessions">
+      <span class="nav-icon">📋</span><span>Sessions</span>
+    </button>
+  </nav>
+
+</div>
+<script src="popup.js"></script>
+</body>
+</html>

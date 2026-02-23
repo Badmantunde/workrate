@@ -1,0 +1,60 @@
+# WorkRate — Netlify Configuration
+# ════════════════════════════════════════════════════════
+# This single Netlify site serves:
+#   /              → workrate-landing.html  (static)
+#   /dashboard/*   → workrate-dashboard/   (Vite React SPA)
+#
+# Structure expected at repo root:
+#   netlify.toml
+#   workrate-landing.html
+#   workrate-dashboard/     ← Vite project
+#   workrate-api/           ← deployed separately on Railway (not here)
+
+[build]
+  # Build the React dashboard
+  base    = "workrate-dashboard"
+  command = "npm install && npm run build"
+  publish = "workrate-dashboard/dist"
+
+# ── Landing page: copy it into the build output ────────────────────────
+# Netlify runs this after the build command in [build] above.
+# We copy the root landing page into the dist folder so both are served.
+[build.environment]
+  NODE_VERSION = "18"
+
+# ── Redirects ──────────────────────────────────────────────────────────
+# 1. Serve landing page at root
+[[redirects]]
+  from   = "/"
+  to     = "/landing.html"
+  status = 200
+
+# 2. SPA fallback for /dashboard — lets React Router (or hash routing) work
+[[redirects]]
+  from   = "/dashboard"
+  to     = "/index.html"
+  status = 200
+
+[[redirects]]
+  from   = "/dashboard/*"
+  to     = "/index.html"
+  status = 200
+
+# 3. Catch-all SPA fallback
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
+
+# ── Headers ────────────────────────────────────────────────────────────
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options        = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy        = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

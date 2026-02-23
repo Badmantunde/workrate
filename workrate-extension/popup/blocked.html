@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Blocked — WorkRate Deep Work Mode</title>
+  <style>
+    @import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Satoshi', system-ui, sans-serif;
+      background: #F7F6F3;
+      color: #18170F;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .icon {
+      width: 64px; height: 64px;
+      background: #1B7A50;
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px;
+    }
+    .icon svg { width: 32px; height: 32px; }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 10px;
+      color: #18170F;
+    }
+    p {
+      font-size: 15px;
+      color: #6A6760;
+      max-width: 400px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: #EDF6F1;
+      border: 1px solid #BEE0CE;
+      border-radius: 99px;
+      color: #1B7A50;
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #1B7A50;
+      animation: blink 1.4s infinite;
+    }
+    .hint {
+      font-size: 13px;
+      color: #A5A29A;
+      margin-top: 8px;
+    }
+    .hint a { color: #1B7A50; text-decoration: none; }
+    .hint a:hover { text-decoration: underline; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+  </style>
+</head>
+<body>
+  <div class="icon">
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="8" y="4" width="4" height="24" rx="2" fill="white" opacity=".5"/>
+      <rect x="14" y="8" width="4" height="20" rx="2" fill="white" opacity=".75"/>
+      <rect x="20" y="2" width="4" height="28" rx="2" fill="white"/>
+    </svg>
+  </div>
+  <h1>Deep Work Mode is on</h1>
+  <p>
+    You're in a focused work session. This site has been blocked to help you stay on track and protect your Work Quality Index.
+  </p>
+  <div class="badge">
+    <div class="dot"></div>
+    Session in progress
+  </div>
+  <p class="hint">
+    To disable Deep Work Mode, click the WorkRate extension icon<br/>
+    or press <strong>Alt + Shift + T</strong> to stop the session.
+  </p>
+  <p class="hint" style="margin-top: 16px">
+    <a href="javascript:history.back()">← Go back</a>
+  </p>
+</body>
+</html>

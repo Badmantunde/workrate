@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>WorkRate — Verified Time. Trusted Work.</title>
+<meta name="description" content="The Chrome extension that proves every billable hour. Clients see exactly what you worked on, verified by tab — not your word."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════════════════════ */
+:root {
+  --bg:           #F7F6F3;
+  --surface:      #FFFFFF;
+  --border:       #E3E0D9;
+  --border-light: #EEECE8;
+  --text:         #18170F;
+  --sub:          #6A6760;
+  --muted:        #A5A29A;
+  --accent:       #1B7A50;
+  --accent-light: #EDF6F1;
+  --accent-bd:    #BEE0CE;
+  --accent-dark:  #0D5535;
+  --warn:         #B8520E;
+  --warn-light:   #FDF1E8;
+  --danger:       #BE1A1A;
+  --danger-light: #FDEAEA;
+  --purple:       #6D28D9;
+
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+
+  --radius:       14px;
+  --radius-sm:    9px;
+  --shadow:       0 2px 24px rgba(24,23,15,.07);
+  --shadow-lg:    0 8px 48px rgba(24,23,15,.11);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESET + BASE
+═══════════════════════════════════════════════════════════ */
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+img { display:block; max-width:100%; }
+a { color:inherit; text-decoration:none; }
+button { font-family:inherit; cursor:pointer; }
+
+/* ═══════════════════════════════════════════════════════════
+   TYPOGRAPHY SCALE
+═══════════════════════════════════════════════════════════ */
+.display {
+  font-family: var(--font-display);
+  font-size: clamp(42px, 7vw, 80px);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+.display em { font-style:italic; color:var(--accent); }
+
+.h2 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 46px);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+.h3 {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.5vw, 28px);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 26px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: all .18s;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(27,122,80,.3); }
+.btn-ghost {
+  background: transparent;
+  color: var(--sub);
+  border: 1.5px solid var(--border);
+}
+.btn-ghost:hover { border-color: var(--accent-bd); color: var(--accent); }
+.btn-lg { padding: 16px 34px; font-size: 16px; border-radius: 11px; }
+.btn-sm { padding: 9px 18px; font-size: 13px; }
+
+/* ═══════════════════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════════════════ */
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 36px;
+}
+.container-narrow {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0 36px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════════════════════ */
+@keyframes fadeUp   { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:none; } }
+@keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
+@keyframes blink    { 0%,100%{opacity:1} 50%{opacity:.25} }
+@keyframes pulse    { 0%,100%{transform:scaleY(.6);opacity:.35} 50%{transform:scaleY(1);opacity:.8} }
+@keyframes tickUp   { from { transform:translateY(8px); opacity:0; } to { transform:none; opacity:1; } }
+@keyframes shimmer  { from{background-position:200% center} to{background-position:-200% center} }
+@keyframes floatUp  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+@keyframes barGrow  { from{width:0} to{width:var(--w)} }
+@keyframes countUp  { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NAV
+═══════════════════════════════════════════════════════════ */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(247,246,243,.88);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-light);
+  height: 60px;
+  display: flex;
+  align-items: center;
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 36px;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.nav-logo-mark {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-links {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+}
+.nav-links a {
+  font-size: 14px;
+  color: var(--sub);
+  font-weight: 500;
+  transition: color .15s;
+}
+.nav-links a:hover { color: var(--text); }
+.nav-cta { display:flex; gap:10px; align-items:center; }
+
+/* ═══════════════════════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════════════════════ */
+.hero {
+  padding: 100px 0 80px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -160px; left: 50%;
+  transform: translateX(-50%);
+  width: 800px; height: 600px;
+  background: radial-gradient(ellipse at center, rgba(27,122,80,.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 36px;
+}
+.hero-text { animation: fadeUp .7s ease both; }
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--accent-light);
+  border: 1px solid var(--accent-bd);
+  border-radius: 99px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 24px;
+}
+.hero-eyebrow-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: blink 1.6s infinite;
+}
+.hero-title { margin-bottom: 22px; }
+.hero-sub {
+  font-size: 18px;
+  color: var(--sub);
+  line-height: 1.65;
+  max-width: 420px;
+  margin-bottom: 36px;
+  font-weight: 300;
+}
+.hero-actions { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+.hero-proof {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 16px;
+}
+.hero-proof span { color: var(--sub); font-weight:500; }
+
+/* ─── Extension mockup ─── */
+.hero-visual { animation: fadeUp .7s .15s ease both; }
+.ext-mockup {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(27,122,80,.06);
+  overflow: hidden;
+  max-width: 340px;
+  margin-left: auto;
+  animation: floatUp 4s ease-in-out infinite;
+}
+.ext-header {
+  background: var(--bg);
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ext-logo {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.ext-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--accent-light);
+  border: 1px solid var(--accent-bd);
+  border-radius: 99px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.ext-badge-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: blink 1.4s infinite;
+}
+.ext-body { padding: 20px 18px; }
+.ext-status-bar {
+  background: var(--accent-light);
+  border: 1px solid var(--accent-bd);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+}
+.ext-status-icon { font-size: 13px; }
+.ext-timers {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.ext-verified-time {
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  animation: tickUp .3s ease;
+}
+.ext-wall-time {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.ext-breakdown {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.ext-bk-card {
+  background: var(--bg);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-align: center;
+}
+.ext-bk-val { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; }
+.ext-bk-lbl { font-size: 9px; color: var(--muted); margin-top: 2px; font-weight: 500; text-transform:uppercase; letter-spacing:.06em; }
+.ext-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.ext-tab-chip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: var(--accent-light);
+  color: var(--accent);
+  border: 1px solid var(--accent-bd);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ext-tab-chip.active::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: blink 1.4s infinite;
+}
+.ext-tab-chip.inactive {
+  background: var(--bg);
+  color: var(--muted);
+  border-color: var(--border);
+}
+
+/* ─── Waveform ─── */
+.wave-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 24px;
+  margin-top: 14px;
+  padding: 0 2px;
+}
+.wave-bar {
+  flex: 1;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: .5;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+/* Animated timer */
+.ext-verified-time { font-variant-numeric: tabular-nums; }
+
+/* ═══════════════════════════════════════════════════════════
+   SOCIAL PROOF STRIP
+═══════════════════════════════════════════════════════════ */
+.proof-strip {
+  border-top: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-light);
+  padding: 20px 0;
+  background: var(--surface);
+}
+.proof-strip-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  flex-wrap: wrap;
+}
+.proof-stat { text-align: center; }
+.proof-stat-val {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.03em;
+  font-family: var(--font-display);
+}
+.proof-stat-lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* ═══════════════════════════════════════════════════════════
+   PROBLEM
+═══════════════════════════════════════════════════════════ */
+.section { padding: 96px 0; }
+.section-sm { padding: 64px 0; }
+
+.problem-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 52px;
+}
+.problem-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 26px;
+  position: relative;
+  overflow: hidden;
+}
+.problem-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--danger);
+  border-radius: 99px 99px 0 0;
+}
+.problem-icon {
+  font-size: 28px;
+  margin-bottom: 16px;
+  display: block;
+}
+.problem-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+.problem-body { font-size: 14px; color: var(--sub); line-height: 1.65; }
+
+/* ═══════════════════════════════════════════════════════════
+   HOW IT WORKS
+═══════════════════════════════════════════════════════════ */
+.how-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 36px;
+  margin-top: 60px;
+  position: relative;
+}
+.how-grid::before {
+  content: '';
+  position: absolute;
+  top: 28px;
+  left: calc(16.6% + 16px);
+  right: calc(16.6% + 16px);
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent-bd), var(--accent-bd));
+  border-top: 1.5px dashed var(--accent-bd);
+}
+.how-step { text-align: center; }
+.how-number {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--accent-light);
+  border: 2px solid var(--accent-bd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0 auto 20px;
+  position: relative;
+  z-index: 1;
+  background-clip: padding-box;
+  font-family: var(--font-display);
+}
+.how-icon {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  background: var(--accent-light);
+  border: 1.5px solid var(--accent-bd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin: 0 auto 20px;
+  position: relative;
+  z-index: 1;
+}
+.how-title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+.how-body { font-size: 14px; color: var(--sub); line-height: 1.65; }
+
+/* ═══════════════════════════════════════════════════════════
+   PROOF REPORT
+═══════════════════════════════════════════════════════════ */
+.proof-section { padding: 96px 0; background: var(--surface); border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); }
+.proof-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 72px;
+  align-items: center;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 36px;
+}
+.proof-copy { }
+.proof-copy .label { margin-bottom: 14px; display:block; }
+.proof-copy .h2 { margin-bottom: 20px; }
+.proof-copy p { font-size: 16px; color: var(--sub); line-height: 1.7; margin-bottom: 16px; }
+.proof-copy ul { list-style: none; padding: 0; margin-top: 24px; display:flex; flex-direction:column; gap:12px; }
+.proof-copy li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--sub);
+}
+.proof-copy li::before {
+  content: '✓';
+  flex-shrink: 0;
+  width: 20px; height: 20px;
+  background: var(--accent-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+/* Client-view card mockup */
+.client-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.client-card-header {
+  background: var(--surface);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.client-card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.client-card-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.verified-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--accent-light);
+  border: 1px solid var(--accent-bd);
+  border-radius: 99px;
+  padding: 4px 11px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.proof-bar-wrap { padding: 20px 20px 0; }
+.proof-bar-label { font-size: 11px; font-weight:600; color: var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:8px; }
+.proof-bar {
+  height: 10px;
+  border-radius: 99px;
+  overflow: hidden;
+  display: flex;
+  gap: 2px;
+  background: var(--border-light);
+}
+.proof-bar-seg {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 1s ease;
+}
+.proof-bar-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+.pbl-item { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--sub); }
+.pbl-dot { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
+
+.proof-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border-light);
+  margin: 16px 0 0;
+}
+.proof-stat-cell {
+  background: var(--surface);
+  padding: 14px 16px;
+  text-align: center;
+}
+.proof-stat-cell-val { font-size: 18px; font-weight: 700; letter-spacing: -0.03em; }
+.proof-stat-cell-lbl { font-size: 10px; color: var(--muted); margin-top: 3px; text-transform:uppercase; letter-spacing:.06em; }
+
+.offtab-log { padding: 16px 20px; }
+.offtab-log-title { font-size: 11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:10px; }
+.offtab-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 12px;
+}
+.offtab-row:last-child { border-bottom:none; }
+.offtab-domain { color: var(--sub); }
+.offtab-dur { color: var(--warn); font-weight:600; }
+
+.approve-row {
+  padding: 14px 20px;
+  background: var(--accent-light);
+  border-top: 1px solid var(--accent-bd);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.approve-row-text { font-size: 13px; font-weight:600; color: var(--accent); }
+.approve-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FEATURE GRID
+═══════════════════════════════════════════════════════════ */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 52px;
+}
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 26px 24px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.feature-card:hover {
+  border-color: var(--accent-bd);
+  box-shadow: 0 4px 20px rgba(27,122,80,.08);
+}
+.feature-icon-wrap {
+  width: 44px; height: 44px;
+  background: var(--accent-light);
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--accent-bd);
+}
+.feature-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; letter-spacing: -0.01em; }
+.feature-body { font-size: 13px; color: var(--sub); line-height: 1.6; }
+
+/* ═══════════════════════════════════════════════════════════
+   PRICING
+═══════════════════════════════════════════════════════════ */
+.pricing-section { padding: 96px 0; }
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 52px;
+  align-items: start;
+}
+.price-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 30px 28px;
+  position: relative;
+  transition: box-shadow .2s;
+}
+.price-card:hover { box-shadow: var(--shadow-lg); }
+.price-card.featured {
+  border-color: var(--accent-bd);
+  background: linear-gradient(160deg, var(--accent-light) 0%, var(--surface) 60%);
+}
+.price-popular {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 99px;
+  white-space: nowrap;
+  letter-spacing: .04em;
+}
+.price-plan { font-size: 13px; font-weight: 600; color: var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:10px; }
+.price-amount {
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.price-amount span { font-size: 18px; font-weight: 500; color: var(--muted); letter-spacing:0; }
+.price-period { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+.price-features { list-style:none; padding:0; margin:0 0 28px; display:flex; flex-direction:column; gap:9px; }
+.price-features li {
+  font-size: 14px;
+  color: var(--sub);
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+.price-features li::before {
+  content: '✓';
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.price-features li.dim::before { color: var(--muted); }
+.price-features li.dim { color: var(--muted); }
+.price-cta { width:100%; text-align:center; display:block; }
+
+/* ═══════════════════════════════════════════════════════════
+   TESTIMONIALS
+═══════════════════════════════════════════════════════════ */
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 52px;
+}
+.testimonial-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 26px 24px;
+}
+.testimonial-quote {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text);
+  margin-bottom: 20px;
+  font-style: italic;
+  font-family: var(--font-display);
+}
+.testimonial-author { display:flex; align-items:center; gap:10px; }
+.testimonial-avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  flex-shrink: 0;
+}
+.testimonial-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.testimonial-role { font-size: 12px; color: var(--muted); }
+.testimonial-stars { color: #F5A623; font-size: 12px; margin-bottom:3px; }
+
+/* ═══════════════════════════════════════════════════════════
+   WAITLIST
+═══════════════════════════════════════════════════════════ */
+.waitlist-section {
+  padding: 100px 0;
+  background: var(--text);
+  position: relative;
+  overflow: hidden;
+}
+.waitlist-section::before {
+  content: '';
+  position: absolute;
+  top: -200px; left: 50%;
+  transform: translateX(-50%);
+  width: 900px; height: 600px;
+  background: radial-gradient(ellipse, rgba(27,122,80,.3) 0%, transparent 65%);
+  pointer-events: none;
+}
+.waitlist-section::after {
+  content: '';
+  position: absolute;
+  bottom: -100px; right: -100px;
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  background: rgba(27,122,80,.08);
+  pointer-events: none;
+}
+.waitlist-inner {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 36px;
+}
+.waitlist-inner .label { color: rgba(255,255,255,.4); margin-bottom:16px; display:block; }
+.waitlist-inner .h2 { color: #fff; margin-bottom: 18px; }
+.waitlist-inner p { color: rgba(255,255,255,.6); font-size: 16px; line-height: 1.65; margin-bottom: 36px; }
+.waitlist-form {
+  display: flex;
+  gap: 10px;
+  max-width: 440px;
+  margin: 0 auto;
+}
+.waitlist-input {
+  flex: 1;
+  padding: 14px 18px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .2s;
+}
+.waitlist-input::placeholder { color: rgba(255,255,255,.35); }
+.waitlist-input:focus { border-color: var(--accent); }
+.waitlist-btn {
+  padding: 14px 24px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background .2s;
+  white-space: nowrap;
+}
+.waitlist-btn:hover { background: var(--accent-dark); }
+.waitlist-success {
+  display: none;
+  color: var(--accent-light);
+  font-size: 15px;
+  font-weight: 500;
+  padding: 14px;
+  background: rgba(27,122,80,.2);
+  border-radius: 10px;
+  border: 1px solid rgba(27,122,80,.3);
+}
+.waitlist-note { font-size:12px; color:rgba(255,255,255,.3); margin-top:14px; }
+
+/* ═══════════════════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════════════════ */
+footer {
+  background: #0F0F0B;
+  padding: 52px 0 36px;
+  color: rgba(255,255,255,.4);
+}
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.footer-brand .nav-logo { color: rgba(255,255,255,.85); }
+.footer-brand p { font-size:13px; color:rgba(255,255,255,.35); margin-top:10px; max-width:220px; line-height:1.6; }
+.footer-links { display:flex; gap:48px; }
+.footer-col h4 { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.35); margin-bottom:14px; }
+.footer-col a { display:block; font-size:13px; color:rgba(255,255,255,.45); margin-bottom:9px; transition:color .15s; }
+.footer-col a:hover { color:rgba(255,255,255,.8); }
+.footer-bottom {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,.07);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HEATMAP MINI (decorative in hero)
+═══════════════════════════════════════════════════════════ */
+.mini-heatmap {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 2px;
+  padding: 0 18px 16px;
+}
+.mh-col { display:flex; flex-direction:column; gap:2px; }
+.mh-cell {
+  height: 8px;
+  border-radius: 2px;
+  background: var(--border-light);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .hero-content { grid-template-columns:1fr; gap:48px; }
+  .ext-mockup { max-width:100%; margin:0 auto; }
+  .proof-layout { grid-template-columns:1fr; }
+  .problem-grid,
+  .how-grid,
+  .features-grid,
+  .pricing-grid,
+  .testimonials-grid { grid-template-columns:1fr; }
+  .how-grid::before { display:none; }
+  .container, .container-narrow { padding:0 20px; }
+  .nav-links { display:none; }
+  .footer-links { flex-direction:column; gap:24px; }
+  .waitlist-form { flex-direction:column; }
+  .proof-stats-grid { grid-template-columns:repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════
+     NAV
+════════════════════════════════════════════════════════ -->
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <div class="nav-logo-mark">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <rect x="1" y="6" width="2" height="7" rx="1" fill="white" opacity=".6"/>
+          <rect x="4.5" y="3" width="2" height="10" rx="1" fill="white" opacity=".8"/>
+          <rect x="8" y="1" width="2" height="12" rx="1" fill="white"/>
+          <rect x="11.5" y="4" width="2" height="9" rx="1" fill="white" opacity=".7"/>
+        </svg>
+      </div>
+      WorkRate
+    </a>
+    <div class="nav-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#proof">The proof report</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+    <div class="nav-cta">
+      <a href="#waitlist" class="btn btn-ghost btn-sm">Join waitlist</a>
+      <a href="#waitlist" class="btn btn-primary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2"/><path d="M12 16V12M12 8h.01"/></svg>
+        Add to Chrome — free
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════════════════════
+     HERO
+════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-text">
+      <div class="hero-eyebrow">
+        <span class="hero-eyebrow-dot"></span>
+        Now in beta — limited early access
+      </div>
+      <h1 class="display hero-title">
+        Clients don't pay<br/>for hours.<br/>
+        They pay for <em>proof.</em>
+      </h1>
+      <p class="hero-sub">
+        WorkRate verifies every billable second — by the actual tabs you work in.
+        Not your word. Not a screenshot. Cryptographic proof your client can read in 10 seconds.
+      </p>
+      <div class="hero-actions">
+        <a href="#waitlist" class="btn btn-primary btn-lg">
+          Get early access
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#how-it-works" class="btn btn-ghost btn-lg">See how it works</a>
+      </div>
+      <div class="hero-proof">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>No screenshots. No keylogging.</span> Only domain names — ever.
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <!-- Extension popup mockup -->
+      <div class="ext-mockup">
+        <div class="ext-header">
+          <div class="ext-logo">
+            <div class="nav-logo-mark" style="width:22px;height:22px;border-radius:6px;">
+              <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+                <rect x="1" y="6" width="2" height="7" rx="1" fill="white" opacity=".6"/>
+                <rect x="4.5" y="3" width="2" height="10" rx="1" fill="white" opacity=".8"/>
+                <rect x="8" y="1" width="2" height="12" rx="1" fill="white"/>
+                <rect x="11.5" y="4" width="2" height="9" rx="1" fill="white" opacity=".7"/>
+              </svg>
+            </div>
+            WorkRate
+          </div>
+          <div class="ext-badge">
+            <span class="ext-badge-dot"></span>
+            Counting
+          </div>
+        </div>
+        <div class="ext-body">
+          <div class="ext-status-bar">
+            <span class="ext-status-icon">✓</span>
+            On figma.com — verified time counting
+          </div>
+          <div class="ext-timers">
+            <div class="ext-verified-time" id="heroTimer">02:14:37</div>
+            <div class="ext-wall-time">02:31:04 wall clock · 88% verified</div>
+          </div>
+          <div class="ext-breakdown">
+            <div class="ext-bk-card">
+              <div class="ext-bk-val" style="color:var(--accent)">88%</div>
+              <div class="ext-bk-lbl">Verified</div>
+            </div>
+            <div class="ext-bk-card">
+              <div class="ext-bk-val" style="color:var(--warn)">8%</div>
+              <div class="ext-bk-lbl">Off-tab</div>
+            </div>
+            <div class="ext-bk-card">
+              <div class="ext-bk-val" style="color:var(--text)">91</div>
+              <div class="ext-bk-lbl">WQI</div>
+            </div>
+          </div>
+          <div class="ext-tabs">
+            <div class="ext-tab-chip active">figma.com</div>
+            <div class="ext-tab-chip active">github.com</div>
+            <div class="ext-tab-chip inactive">notion.so</div>
+          </div>
+          <div class="wave-row" id="waveRow"></div>
+        </div>
+        <!-- Mini heatmap -->
+        <div class="mini-heatmap" id="miniHeatmap"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     PROOF STRIP
+════════════════════════════════════════════════════════ -->
+<div class="proof-strip">
+  <div class="proof-strip-inner">
+    <div class="proof-stat">
+      <div class="proof-stat-val">847</div>
+      <div class="proof-stat-lbl">Sessions tracked in beta</div>
+    </div>
+    <div style="width:1px;height:32px;background:var(--border);"></div>
+    <div class="proof-stat">
+      <div class="proof-stat-val">$0</div>
+      <div class="proof-stat-lbl">Billing disputes this month</div>
+    </div>
+    <div style="width:1px;height:32px;background:var(--border);"></div>
+    <div class="proof-stat">
+      <div class="proof-stat-val">97%</div>
+      <div class="proof-stat-lbl">Client approval rate</div>
+    </div>
+    <div style="width:1px;height:32px;background:var(--border);"></div>
+    <div class="proof-stat">
+      <div class="proof-stat-val">2.4×</div>
+      <div class="proof-stat-lbl">Faster invoice approval</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     PROBLEM
+════════════════════════════════════════════════════════ -->
+<section class="section" id="problem">
+  <div class="container">
+    <div class="reveal" style="text-align:center;max-width:560px;margin:0 auto 0;">
+      <span class="label">The problem</span>
+      <h2 class="h2" style="margin-top:14px;margin-bottom:16px;">
+        Freelancing runs on trust.<br/>Trust is hard to prove.
+      </h2>
+      <p style="font-size:16px;color:var(--sub);line-height:1.7;">
+        Every freelancer has been there — a client who questions the hours, a payment that stalls, a relationship that frays. It's not about dishonesty. It's about the absence of evidence.
+      </p>
+    </div>
+    <div class="problem-grid" style="margin-top:52px;">
+      <div class="problem-card reveal">
+        <span class="problem-icon">😤</span>
+        <div class="problem-title">"Can you prove you worked 8 hours?"</div>
+        <div class="problem-body">Clients can't see inside your screen. A time-tracking number with no evidence behind it is just a number — and some clients know it.</div>
+      </div>
+      <div class="problem-card reveal">
+        <span class="problem-icon">💸</span>
+        <div class="problem-title">Payment disputes kill momentum</div>
+        <div class="problem-body">Chasing invoices, re-explaining work, offering discounts to keep the peace. Every billing dispute costs you time, money, and the relationship.</div>
+      </div>
+      <div class="problem-card reveal">
+        <span class="problem-icon">📸</span>
+        <div class="problem-title">Screenshots feel like surveillance</div>
+        <div class="problem-body">Existing "proof" tools take screenshots of your screen. Invasive, uncomfortable, and exposing confidential client work to a third party.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     HOW IT WORKS
+════════════════════════════════════════════════════════ -->
+<section class="section" id="how-it-works" style="padding-top:0;">
+  <div class="container">
+    <div class="reveal" style="text-align:center;max-width:520px;margin:0 auto;">
+      <span class="label">How it works</span>
+      <h2 class="h2" style="margin-top:14px;margin-bottom:16px;">
+        Register tabs. Start timer.<br/>Work normally.
+      </h2>
+      <p style="font-size:16px;color:var(--sub);line-height:1.7;">
+        WorkRate only counts seconds when you're actively on a tab you registered for that project. The moment you leave — clock pauses. The moment you return — clock resumes.
+      </p>
+    </div>
+    <div class="how-grid reveal">
+      <div class="how-step">
+        <div class="how-icon">📌</div>
+        <h3 class="how-title">Register your project tabs</h3>
+        <p class="how-body">Before you start, register the tabs you'll actually work in — Figma, GitHub, your dev server, Notion. The extension only counts time on those tabs.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-icon">⏱</div>
+        <h3 class="how-title">Work normally — it auto-tracks</h3>
+        <p class="how-body">Switch to Gmail? Clock pauses — logged as "off-tab." Walk away from your desk? Clock pauses — logged as "idle." Come back to Figma? Clock resumes instantly.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-icon">📊</div>
+        <h3 class="how-title">Send your client a proof report</h3>
+        <p class="how-body">At session end, share a link. Your client sees verified time, the breakdown, which tabs you were on, and a WQI score — all without seeing anything sensitive.</p>
+      </div>
+    </div>
+
+    <!-- State transition diagram -->
+    <div class="reveal" style="margin-top:52px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;">
+      <div style="text-align:center;padding:16px 24px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:#fff;font-size:18px;font-weight:700;">●</div>
+        <div style="font-size:13px;font-weight:600;color:var(--accent)">On project tab</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Clock ticking ✓</div>
+      </div>
+      <div style="font-size:20px;color:var(--border);padding:0 8px;">→</div>
+      <div style="text-align:center;padding:16px 24px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:#A5A29A;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:#fff;font-size:18px;font-weight:700;">○</div>
+        <div style="font-size:13px;font-weight:600;color:var(--sub)">Switched to Gmail</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Auto-paused · logged</div>
+      </div>
+      <div style="font-size:20px;color:var(--border);padding:0 8px;">→</div>
+      <div style="text-align:center;padding:16px 24px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--warn);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:#fff;font-size:18px;font-weight:700;">⏸</div>
+        <div style="font-size:13px;font-weight:600;color:var(--warn)">No movement</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Idle detected · paused</div>
+      </div>
+      <div style="font-size:20px;color:var(--border);padding:0 8px;">→</div>
+      <div style="text-align:center;padding:16px 24px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:#fff;font-size:18px;font-weight:700;">●</div>
+        <div style="font-size:13px;font-weight:600;color:var(--accent)">Back to Figma</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Auto-resumed ✓</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     PROOF REPORT
+════════════════════════════════════════════════════════ -->
+<section class="proof-section" id="proof">
+  <div class="proof-layout">
+    <div class="proof-copy reveal">
+      <span class="label">What your client sees</span>
+      <h2 class="h2" style="margin-top:14px;">A report they can trust in 10 seconds.</h2>
+      <p>Clients get a read-only link. No login required. They see the verified time breakdown, which tabs you worked on, where you went off-task, and a Work Quality Index score.</p>
+      <p>Nothing invasive. No page content, no screenshots, no keystrokes. Only the domains you visited — and only because you registered them yourself.</p>
+      <ul>
+        <li>Verified % vs wall clock — the honest gap, explained</li>
+        <li>Off-tab log with exact domains and duration</li>
+        <li>Activity heatmap — 5-minute blocks of actual work</li>
+        <li>One-click approval to unblock your invoice</li>
+      </ul>
+    </div>
+
+    <!-- Client card mockup -->
+    <div class="reveal">
+      <div class="client-card">
+        <div class="client-card-header">
+          <div>
+            <div class="client-card-title">Dashboard UI Redesign · Volta Studio</div>
+            <div class="client-card-sub">Feb 23, 2026 · 09:12 – 12:47</div>
+          </div>
+          <div class="verified-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+            Verified
+          </div>
+        </div>
+
+        <div class="proof-bar-wrap">
+          <div class="proof-bar-label">Time breakdown</div>
+          <div class="proof-bar">
+            <div class="proof-bar-seg" style="width:90%;background:var(--accent);border-radius:99px 0 0 99px;"></div>
+            <div class="proof-bar-seg" style="width:6%;background:var(--warn);"></div>
+            <div class="proof-bar-seg" style="width:4%;background:var(--danger);border-radius:0 99px 99px 0;"></div>
+          </div>
+          <div class="proof-bar-legend">
+            <div class="pbl-item"><div class="pbl-dot" style="background:var(--accent)"></div>90% verified on project tabs</div>
+            <div class="pbl-item"><div class="pbl-dot" style="background:var(--warn)"></div>6% off-tab</div>
+            <div class="pbl-item"><div class="pbl-dot" style="background:var(--danger)"></div>4% idle</div>
+          </div>
+        </div>
+
+        <div class="proof-stats-grid">
+          <div class="proof-stat-cell">
+            <div class="proof-stat-cell-val" style="color:var(--accent)">3h 35m</div>
+            <div class="proof-stat-cell-lbl">Verified</div>
+          </div>
+          <div class="proof-stat-cell">
+            <div class="proof-stat-cell-val" style="color:var(--text)">3h 59m</div>
+            <div class="proof-stat-cell-lbl">Wall clock</div>
+          </div>
+          <div class="proof-stat-cell">
+            <div class="proof-stat-cell-val" style="color:var(--accent)">87</div>
+            <div class="proof-stat-cell-lbl">WQI</div>
+          </div>
+          <div class="proof-stat-cell">
+            <div class="proof-stat-cell-val" style="color:var(--warn)">4</div>
+            <div class="proof-stat-cell-lbl">Off-tab events</div>
+          </div>
+        </div>
+
+        <div class="offtab-log">
+          <div class="offtab-log-title">Off-tab log</div>
+          <div class="offtab-row">
+            <span class="offtab-domain">gmail.com</span>
+            <span class="offtab-dur">4m</span>
+          </div>
+          <div class="offtab-row">
+            <span class="offtab-domain">slack.com</span>
+            <span class="offtab-dur">5m 20s</span>
+          </div>
+          <div class="offtab-row">
+            <span class="offtab-domain">twitter.com</span>
+            <span class="offtab-dur">5m 40s</span>
+          </div>
+        </div>
+
+        <div class="approve-row">
+          <div class="approve-row-text">Ready to approve?</div>
+          <button class="approve-btn" onclick="this.textContent='✓ Approved';this.style.background='#0D5535';">Approve hours</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     FEATURES
+════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="reveal" style="text-align:center;max-width:500px;margin:0 auto;">
+      <span class="label">Everything included</span>
+      <h2 class="h2" style="margin-top:14px;">Built for freelancers who take accountability seriously.</h2>
+    </div>
+    <div class="features-grid" style="margin-top:52px;">
+      <div class="feature-card reveal">
+        <div class="feature-icon-wrap">📌</div>
+        <div class="feature-title">Registered-tab tracking</div>
+        <div class="feature-body">Only time on your pre-selected project tabs counts. The clock never lies — it can't. Physics, not trust.</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon-wrap">⏸</div>
+        <div class="feature-title">Smart idle detection</div>
+        <div class="feature-body">Two-layer idle detection: system idle (no keyboard/mouse) and activity idle (no movement for 3 minutes). Both pause the verified clock exactly.</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon-wrap">📊</div>
+        <div class="feature-title">Work Quality Index</div>
+        <div class="feature-body">A composite score of focus ratio, consistency, and output signal. Gives clients a single number that tells the full story.</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon-wrap">🌡️</div>
+        <div class="feature-title">5-minute activity heatmap</div>
+        <div class="feature-body">A 24-hour grid showing every 5-minute block of verified work. Clients see the shape of your day at a glance.</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon-wrap">🔒</div>
+        <div class="feature-title">Deep Work Mode</div>
+        <div class="feature-body">Block distracting sites during a session. Twitter, Reddit, YouTube — redirected automatically. Your focus, enforced.</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon-wrap">📤</div>
+        <div class="feature-title">Shareable proof links</div>
+        <div class="feature-body">One link, no login for clients. They see your verified hours, breakdown, and can approve directly. Invoice unblocked in 10 seconds.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     TESTIMONIALS
+════════════════════════════════════════════════════════ -->
+<section class="section" style="padding-top:0;">
+  <div class="container">
+    <div class="reveal" style="text-align:center;margin-bottom:0;">
+      <span class="label">Early feedback</span>
+      <h2 class="h2" style="margin-top:14px;">From the beta.</h2>
+    </div>
+    <div class="testimonials-grid reveal" style="margin-top:48px;">
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-quote">"Sent my first WorkRate proof link on a Friday. Got approved by Monday morning. No back-and-forth, no questions. First time in 4 years that's happened."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar" style="background:linear-gradient(135deg,#1B7A50,#0D5535)">M</div>
+          <div>
+            <div class="testimonial-name">Marcus T.</div>
+            <div class="testimonial-role">Product designer · 6 years freelance</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-quote">"My client literally said 'I can finally see what I'm paying for.' That sentence is worth every dollar I'll ever spend on this tool."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar" style="background:linear-gradient(135deg,#6D28D9,#4C1D95)">S</div>
+          <div>
+            <div class="testimonial-name">Sara K.</div>
+            <div class="testimonial-role">Full-stack developer · Remote</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-quote">"The off-tab log is what sold my client. They could see I checked email twice the whole day. That kind of transparency builds a relationship no screenshot could."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar" style="background:linear-gradient(135deg,#B8520E,#7C3B0A)">J</div>
+          <div>
+            <div class="testimonial-name">James R.</div>
+            <div class="testimonial-role">UX consultant · Agency freelancer</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     PRICING
+════════════════════════════════════════════════════════ -->
+<section class="pricing-section" id="pricing" style="background:var(--surface);border-top:1px solid var(--border-light);">
+  <div class="container">
+    <div class="reveal" style="text-align:center;max-width:480px;margin:0 auto;">
+      <span class="label">Pricing</span>
+      <h2 class="h2" style="margin-top:14px;margin-bottom:16px;">Pay for what you ship.</h2>
+      <p style="font-size:15px;color:var(--sub);">Start free. Upgrade when your client base grows.</p>
+    </div>
+    <div class="pricing-grid reveal" style="margin-top:48px;">
+
+      <div class="price-card">
+        <div class="price-plan">Free</div>
+        <div class="price-amount">$0<span></span></div>
+        <div class="price-period">forever</div>
+        <ul class="price-features">
+          <li>Chrome Extension</li>
+          <li>Registered-tab tracking</li>
+          <li>5 sessions / month</li>
+          <li>Basic proof reports</li>
+          <li class="dim">Heatmap & WQI</li>
+          <li class="dim">Dashboard</li>
+          <li class="dim">Client approval flow</li>
+        </ul>
+        <a href="#waitlist" class="btn btn-ghost price-cta">Get started free</a>
+      </div>
+
+      <div class="price-card featured">
+        <div class="price-popular">Most popular</div>
+        <div class="price-plan">Pro</div>
+        <div class="price-amount">$19<span>/mo</span></div>
+        <div class="price-period">billed monthly · cancel anytime</div>
+        <ul class="price-features">
+          <li>Everything in Free</li>
+          <li>Unlimited sessions</li>
+          <li>Activity heatmap</li>
+          <li>WQI scoring</li>
+          <li>Full dashboard</li>
+          <li>Client approval flow</li>
+          <li>Shareable proof links</li>
+        </ul>
+        <a href="#waitlist" class="btn btn-primary price-cta">Start Pro trial</a>
+      </div>
+
+      <div class="price-card">
+        <div class="price-plan">Agency</div>
+        <div class="price-amount">$49<span>/mo</span></div>
+        <div class="price-period">up to 5 team members</div>
+        <ul class="price-features">
+          <li>Everything in Pro</li>
+          <li>Team dashboard</li>
+          <li>Admin panel</li>
+          <li>WQI weight customisation</li>
+          <li>White-label reports</li>
+          <li>Priority support</li>
+          <li>Custom integrations</li>
+        </ul>
+        <a href="#waitlist" class="btn btn-ghost price-cta">Contact us</a>
+      </div>
+    </div>
+
+    <!-- Privacy callout -->
+    <div class="reveal" style="margin-top:36px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;display:flex;gap:20px;align-items:flex-start;">
+      <div style="font-size:24px;flex-shrink:0;">🔒</div>
+      <div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px;">Privacy by design — not by policy</div>
+        <div style="font-size:14px;color:var(--sub);line-height:1.65;">WorkRate stores <strong>only domain names</strong> — never full URLs, page content, keystrokes, or screenshots. Every piece of data you see in your proof report is data you already knew about: which sites you visited and for how long. Nothing else enters our servers.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     WAITLIST
+════════════════════════════════════════════════════════ -->
+<section class="waitlist-section" id="waitlist">
+  <div class="waitlist-inner">
+    <span class="label">Early access</span>
+    <h2 class="h2">Join the waitlist.<br/>Get in first.</h2>
+    <p>We're rolling out access to beta users now. Add your email and we'll send you an invite — plus 3 months of Pro free.</p>
+    <div class="waitlist-form" id="waitlistForm">
+      <input type="email" class="waitlist-input" id="waitlistEmail" placeholder="you@example.com" autocomplete="email"/>
+      <button class="waitlist-btn" onclick="submitWaitlist()">Get early access</button>
+    </div>
+    <div class="waitlist-success" id="waitlistSuccess">
+      ✓ You're on the list. We'll be in touch soon.
+    </div>
+    <p class="waitlist-note">No spam. Unsubscribe any time. We hate cold emails too.</p>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="nav-logo" style="color:rgba(255,255,255,.85);">
+          <div class="nav-logo-mark">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="6" width="2" height="7" rx="1" fill="white" opacity=".6"/>
+              <rect x="4.5" y="3" width="2" height="10" rx="1" fill="white" opacity=".8"/>
+              <rect x="8" y="1" width="2" height="12" rx="1" fill="white"/>
+              <rect x="11.5" y="4" width="2" height="9" rx="1" fill="white" opacity=".7"/>
+            </svg>
+          </div>
+          WorkRate
+        </div>
+        <p>Verified time tracking for freelancers who value client trust.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="#how-it-works">How it works</a>
+          <a href="#proof">Proof reports</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#">Chrome Extension</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="#">About</a>
+          <a href="#">Blog</a>
+          <a href="#">Changelog</a>
+          <a href="#">Contact</a>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <a href="#">Privacy policy</a>
+          <a href="#">Terms of service</a>
+          <a href="#">Data & security</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 WorkRate. All rights reserved.</span>
+      <span>Made for freelancers, by freelancers.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   LIVE TIMER IN HERO
+════════════════════════════════════════════════════════ */
+let heroSeconds = 2 * 3600 + 14 * 60 + 37;
+const timerEl = document.getElementById('heroTimer');
+setInterval(() => {
+  heroSeconds++;
+  const h = Math.floor(heroSeconds / 3600);
+  const m = Math.floor((heroSeconds % 3600) / 60);
+  const s = heroSeconds % 60;
+  timerEl.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}, 1000);
+
+/* ════════════════════════════════════════════════════════
+   WAVE BARS
+════════════════════════════════════════════════════════ */
+const waveRow = document.getElementById('waveRow');
+const BARS = 18;
+for (let i = 0; i < BARS; i++) {
+  const bar = document.createElement('div');
+  bar.className = 'wave-bar';
+  const h = 6 + Math.random() * 16;
+  bar.style.cssText = `height:${h}px;animation-delay:${(i * 0.06).toFixed(2)}s;animation-duration:${(0.5 + Math.random() * 0.5).toFixed(2)}s`;
+  waveRow.appendChild(bar);
+}
+
+/* ════════════════════════════════════════════════════════
+   MINI HEATMAP
+════════════════════════════════════════════════════════ */
+const heatmap = document.getElementById('miniHeatmap');
+const HEAT_COLORS = ['#EEECE8', 'rgba(27,122,80,.14)', 'rgba(27,122,80,.32)', 'rgba(27,122,80,.58)', 'rgba(27,122,80,.84)'];
+for (let h = 0; h < 24; h++) {
+  const col = document.createElement('div');
+  col.className = 'mh-col';
+  for (let b = 0; b < 3; b++) {
+    const cell = document.createElement('div');
+    cell.className = 'mh-cell';
+    const peak = (h >= 9 && h <= 12) || (h >= 14 && h <= 17);
+    const v = peak ? Math.floor(Math.random() * 4) + 1 : Math.random() > 0.6 ? Math.floor(Math.random() * 2) : 0;
+    cell.style.background = HEAT_COLORS[v];
+    col.appendChild(cell);
+  }
+  heatmap.appendChild(col);
+}
+
+/* ════════════════════════════════════════════════════════
+   SCROLL REVEAL
+════════════════════════════════════════════════════════ */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => entry.target.classList.add('visible'), i * 80);
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+/* ════════════════════════════════════════════════════════
+   WAITLIST
+════════════════════════════════════════════════════════ */
+function submitWaitlist() {
+  const email = document.getElementById('waitlistEmail').value.trim();
+  if (!email || !email.includes('@')) {
+    document.getElementById('waitlistEmail').style.borderColor = '#BE1A1A';
+    setTimeout(() => document.getElementById('waitlistEmail').style.borderColor = '', 2000);
+    return;
+  }
+  document.getElementById('waitlistForm').style.display = 'none';
+  document.getElementById('waitlistSuccess').style.display = 'block';
+  // In production: POST to /api/waitlist or a form service like Buttondown / ConvertKit
+  console.log('Waitlist signup:', email);
+}
+
+document.getElementById('waitlistEmail').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitWaitlist();
+});
+</script>
+
+</body>
+</html>

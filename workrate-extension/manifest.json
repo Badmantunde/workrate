@@ -1,0 +1,58 @@
+{
+  "manifest_version": 3,
+  "name": "WorkRate — Time Tracker",
+  "version": "1.0.0",
+  "description": "Ethical freelance time tracking with activity heatmap intelligence and Work Quality Index scoring.",
+
+  "permissions": [
+    "storage",
+    "alarms",
+    "idle",
+    "tabs",
+    "notifications"
+  ],
+
+  "host_permissions": [
+    "https://api.workrate.io/*"
+  ],
+
+  "background": {
+    "service_worker": "background/worker.js",
+    "type": "module"
+  },
+
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16":  "icons/icon16.png",
+      "32":  "icons/icon32.png",
+      "48":  "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "WorkRate"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/detector.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "icons": {
+    "16":  "icons/icon16.png",
+    "32":  "icons/icon32.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "commands": {
+    "toggle-timer": {
+      "suggested_key": {
+        "default": "Alt+Shift+T"
+      },
+      "description": "Toggle WorkRate timer"
+    }
+  }
+}
