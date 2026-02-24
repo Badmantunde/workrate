@@ -17,10 +17,10 @@
   --purple-bd:    rgba(109,40,217,.25);
   --warn:         #B8520E;
   --warn-light:   #FDF1E8;
-  --warn-bd:      rgba(184,82,14,.3);
+  --warn-bd:      rgba(184,82,14,.25);
   --danger:       #BE1A1A;
   --danger-light: #FDEAEA;
-  --danger-bd:    rgba(190,26,26,.3);
+  --danger-bd:    rgba(190,26,26,.25);
 }
 
 /* ── Reset ─────────────────────────────────────────────────────────────── */

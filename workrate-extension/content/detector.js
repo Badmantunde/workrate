@@ -81,7 +81,8 @@
 
     checkHandshake();
     checkDashboardSession();
-    setInterval(() => { checkHandshake(); checkDashboardSession(); }, 3_000);
+    // Poll every 2 seconds for faster sync (dashboard writes to localStorage, we read it)
+    setInterval(() => { checkHandshake(); checkDashboardSession(); }, 2_000);
   }
 
   /* ── Activity detection (all pages) ─────────────────────────────── */

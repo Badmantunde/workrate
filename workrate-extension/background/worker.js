@@ -595,11 +595,16 @@ function handleMessage(msg, _sender, sendResponse) {
               state.customBlockList = payload.blockList;
             }
           }
+          // Update task/client/tags from dashboard
+          if (payload.task) state.task = payload.task;
+          if (payload.client) state.client = payload.client;
+          if (Array.isArray(payload.tags)) state.tags = payload.tags;
+          
           if(!state.isRunning){
             startSession({
-              task:   payload.task   || "Dashboard session",
-              client: payload.client || "",
-              tags:   [],
+              task:   payload.task   || state.task || "Dashboard session",
+              client: payload.client || state.client || "",
+              tags:   Array.isArray(payload.tags) ? payload.tags : state.tags || [],
             });
           }
           sendResponse({ success: true });
