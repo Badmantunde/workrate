@@ -2,95 +2,362 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Blocked — WorkRate Deep Work Mode</title>
+  <title>Blocked — WorkRate Deep Work</title>
   <style>
     @import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap');
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0F0E0B;
+      --surface: #1A1916;
+      --border: #2A2924;
+      --text: #F0EDE8;
+      --muted: #6A6760;
+      --sub: #A5A29A;
+      --accent: #1B7A50;
+      --accent-light: rgba(27,122,80,0.15);
+      --danger: #BE1A1A;
+      --danger-light: rgba(190,26,26,0.12);
+      --purple: #7C3AED;
+    }
+
     body {
       font-family: 'Satoshi', system-ui, sans-serif;
-      background: #F7F6F3;
-      color: #18170F;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      text-align: center;
       padding: 40px 20px;
+      text-align: center;
     }
-    .icon {
+
+    /* Subtle animated grid background */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(27,122,80,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(27,122,80,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    .card {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px 44px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 32px 64px rgba(0,0,0,.5);
+    }
+
+    .lock-icon {
       width: 64px; height: 64px;
-      background: #1B7A50;
-      border-radius: 16px;
+      background: var(--danger-light);
+      border: 1px solid rgba(190,26,26,0.3);
+      border-radius: 18px;
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 24px;
+      margin: 0 auto 28px;
     }
-    .icon svg { width: 32px; height: 32px; }
-    h1 {
-      font-size: 28px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      margin-bottom: 10px;
-      color: #18170F;
-    }
-    p {
-      font-size: 15px;
-      color: #6A6760;
-      max-width: 400px;
-      line-height: 1.6;
-      margin-bottom: 32px;
-    }
-    .badge {
+
+    .blocked-domain {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 10px 20px;
-      background: #EDF6F1;
-      border: 1px solid #BEE0CE;
+      padding: 6px 16px;
+      background: var(--danger-light);
+      border: 1px solid rgba(190,26,26,0.3);
       border-radius: 99px;
-      color: #1B7A50;
-      font-weight: 600;
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #F87171;
+      letter-spacing: -0.01em;
       margin-bottom: 24px;
     }
-    .dot {
-      width: 8px; height: 8px;
+
+    .blocked-domain .dot {
+      width: 6px; height: 6px;
       border-radius: 50%;
-      background: #1B7A50;
+      background: #F87171;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--sub);
+      line-height: 1.6;
+      margin-bottom: 36px;
+    }
+
+    /* Session timer */
+    .session-box {
+      background: var(--accent-light);
+      border: 1px solid rgba(27,122,80,0.3);
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+
+    .session-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #4ADE80;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .session-label .pulse {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #4ADE80;
       animation: blink 1.4s infinite;
     }
-    .hint {
-      font-size: 13px;
-      color: #A5A29A;
-      margin-top: 8px;
+
+    .session-timer {
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: -0.05em;
+      color: #4ADE80;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
     }
-    .hint a { color: #1B7A50; text-decoration: none; }
-    .hint a:hover { text-decoration: underline; }
+
+    .session-task {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* Attempt counter */
+    .attempt-box {
+      background: var(--danger-light);
+      border: 1px solid rgba(190,26,26,0.25);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .attempt-count {
+      font-size: 22px;
+      font-weight: 700;
+      color: #F87171;
+      min-width: 32px;
+      text-align: center;
+    }
+
+    .attempt-text {
+      text-align: left;
+    }
+
+    .attempt-text strong {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #F87171;
+    }
+
+    .attempt-text span {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* WQI impact warning */
+    .wqi-warning {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 28px;
+    }
+
+    .wqi-warning strong { color: #FBBF24; }
+
+    /* Go back button */
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 24px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--sub);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      text-decoration: none;
+    }
+
+    .btn-back:hover {
+      background: var(--surface);
+      border-color: var(--muted);
+      color: var(--text);
+    }
+
+    .hint {
+      margin-top: 20px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .hint kbd {
+      display: inline-block;
+      padding: 2px 7px;
+      background: var(--border);
+      border-radius: 5px;
+      font-family: inherit;
+      font-size: 11px;
+      color: var(--sub);
+    }
+
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
   </style>
 </head>
 <body>
-  <div class="icon">
-    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="8" y="4" width="4" height="24" rx="2" fill="white" opacity=".5"/>
-      <rect x="14" y="8" width="4" height="20" rx="2" fill="white" opacity=".75"/>
-      <rect x="20" y="2" width="4" height="28" rx="2" fill="white"/>
-    </svg>
+  <div class="card">
+    <div class="lock-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </div>
+
+    <div class="blocked-domain">
+      <span class="dot"></span>
+      <span id="blocked-url">This site is blocked</span>
+    </div>
+
+    <h1>Deep Work Mode is active</h1>
+    <p class="subtitle">
+      You're in a verified work session. This site is on your distraction block list.<br/>
+      Every second here lowers your Work Quality Index.
+    </p>
+
+    <!-- Live session timer -->
+    <div class="session-box">
+      <div class="session-label">
+        <span class="pulse"></span>
+        Session in progress
+      </div>
+      <div class="session-timer" id="session-timer">00:00:00</div>
+      <div class="session-task" id="session-task">Loading session…</div>
+    </div>
+
+    <!-- Attempt counter -->
+    <div class="attempt-box">
+      <div class="attempt-count" id="attempt-count">1</div>
+      <div class="attempt-text">
+        <strong id="attempt-label">Distraction attempt this session</strong>
+        <span>Logged in your proof report. Repeated attempts reduce WQI.</span>
+      </div>
+    </div>
+
+    <!-- WQI warning -->
+    <div class="wqi-warning">
+      <strong>⚠ WQI impact:</strong> Each blocked page visit is recorded as an off-task event.
+      Staying here reduces your verified focus score. Your client can see this in the proof report.
+    </div>
+
+    <a href="javascript:history.back()" class="btn-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+      Back to work
+    </a>
+
+    <div class="hint">
+      To stop Deep Work Mode: click the WorkRate extension icon<br/>
+      or press <kbd>Alt+Shift+T</kbd> to end the session
+    </div>
   </div>
-  <h1>Deep Work Mode is on</h1>
-  <p>
-    You're in a focused work session. This site has been blocked to help you stay on track and protect your Work Quality Index.
-  </p>
-  <div class="badge">
-    <div class="dot"></div>
-    Session in progress
-  </div>
-  <p class="hint">
-    To disable Deep Work Mode, click the WorkRate extension icon<br/>
-    or press <strong>Alt + Shift + T</strong> to stop the session.
-  </p>
-  <p class="hint" style="margin-top: 16px">
-    <a href="javascript:history.back()">← Go back</a>
-  </p>
+
+  <script>
+    // Read blocked domain from query params (set by worker before redirect)
+    const params = new URLSearchParams(location.search);
+    const blockedDomain = params.get("from") || document.referrer
+      ? (() => { try { return new URL(document.referrer).hostname.replace(/^www\./, ""); } catch(_){ return "this site"; } })()
+      : "this site";
+    document.getElementById("blocked-url").textContent = blockedDomain;
+
+    // Format seconds as HH:MM:SS
+    const fmt = (s) =>
+      `${String(Math.floor(s/3600)).padStart(2,"0")}:${String(Math.floor((s%3600)/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+
+    // Track attempt count in session storage per session
+    const attemptKey = "wr_blocked_attempts_" + (params.get("sessionId") || "current");
+    let attempts = parseInt(sessionStorage.getItem(attemptKey) || "0") + 1;
+    sessionStorage.setItem(attemptKey, String(attempts));
+
+    const attemptCount = document.getElementById("attempt-count");
+    const attemptLabel = document.getElementById("attempt-label");
+    attemptCount.textContent = attempts;
+    attemptLabel.textContent = attempts === 1
+      ? "Distraction attempt this session"
+      : `Distraction attempts this session`;
+    if (attempts >= 3) {
+      attemptCount.style.color = "#EF4444";
+      document.querySelector(".attempt-box").style.borderColor = "rgba(239,68,68,0.4)";
+    }
+
+    // Live session timer — get state from extension
+    const timerEl = document.getElementById("session-timer");
+    const taskEl  = document.getElementById("session-task");
+    let sessionStartMs = null;
+    let sessionTask    = "";
+
+    function tick() {
+      if (sessionStartMs) {
+        const elapsed = Math.floor((Date.now() - sessionStartMs) / 1000);
+        timerEl.textContent = fmt(elapsed);
+      }
+    }
+
+    function loadState() {
+      try {
+        chrome.runtime.sendMessage({ type: "GET_STATE" }, (res) => {
+          if (chrome.runtime.lastError || !res?.state) return;
+          const s = res.state;
+          if (s.sessionStart) {
+            sessionStartMs = new Date(s.sessionStart).getTime();
+            tick();
+          }
+          if (s.task) {
+            taskEl.textContent = s.task;
+          } else {
+            taskEl.textContent = "Deep Work session";
+          }
+        });
+      } catch(_) {}
+    }
+
+    loadState();
+    setInterval(tick, 1000);
+    // Refresh state every 30s in case worker updated it
+    setInterval(loadState, 30_000);
+  </script>
 </body>
 </html>

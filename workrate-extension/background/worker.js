@@ -95,6 +95,7 @@ const DEFAULT_STATE = {
   // Internal
   lastHeartbeatMs:  null,
   deepWorkEnabled:  false,
+  customBlockList:  null,   // set from dashboard session config; null = use DISTRACTING_DOMAINS
 };
 
 let state = { ...DEFAULT_STATE };
@@ -308,10 +309,16 @@ async function handleTabFocus(tab) {
   let domain = "unknown";
   try { domain = new URL(tab.url).hostname.replace(/^www\./, ""); } catch (_) { return; }
 
-  // Deep Work Mode
-  if (state.deepWorkEnabled && DISTRACTING_DOMAINS.includes(domain)) {
-    chrome.tabs.update(tab.id, { url: chrome.runtime.getURL("popup/blocked.html") });
-    return;
+  // Deep Work Mode — use custom block list if set, otherwise fall back to defaults
+  if (state.deepWorkEnabled) {
+    const effectiveList = state.customBlockList || DISTRACTING_DOMAINS;
+    if (effectiveList.some(b => domain === b || domain.endsWith("." + b))) {
+      const sessionId = state.sessionStart ? btoa(state.sessionStart).slice(0,8) : "s";
+      chrome.tabs.update(tab.id, {
+        url: chrome.runtime.getURL(`popup/blocked.html?from=${encodeURIComponent(domain)}&sessionId=${sessionId}`)
+      });
+      return;
+    }
   }
 
   const prevTabId       = state.activeTabId;
@@ -447,7 +454,29 @@ function handleMessage(msg, _sender, sendResponse) {
       break;
 
     case "SET_DEEP_WORK":
-      state.deepWorkEnabled = msg.payload.enabled;
+      state.deepWorkEnabled = !!msg.payload.enabled;
+      // Accept a custom blockList from the dashboard; fall back to built-in list
+      if (Array.isArray(msg.payload.blockList) && msg.payload.blockList.length > 0) {
+        state.customBlockList = msg.payload.blockList;
+      } else if (!msg.payload.enabled) {
+        state.customBlockList = null; // clear on disable
+      }
+      // Immediately redirect any currently open tab that is on the block list
+      if (state.deepWorkEnabled) {
+        const effectiveList = state.customBlockList || DISTRACTING_DOMAINS;
+        chrome.tabs.query({ currentWindow: true }, (tabs) => {
+          tabs.forEach(tab => {
+            if (!tab.url) return;
+            try {
+              const domain = new URL(tab.url).hostname.replace(/^www\./, "");
+              if (effectiveList.some(b => domain === b || domain.endsWith("." + b))) {
+                const sid = state.sessionStart ? btoa(state.sessionStart).slice(0,8) : "s";
+                chrome.tabs.update(tab.id, { url: chrome.runtime.getURL(`popup/blocked.html?from=${encodeURIComponent(domain)}&sessionId=${sid}`) });
+              }
+            } catch (_) {}
+          });
+        });
+      }
       persistState();
       broadcastState();
       sendResponse({ success: true });
@@ -526,6 +555,70 @@ function handleMessage(msg, _sender, sendResponse) {
           }));
         sendResponse({ success: true, tabs: clean });
       });
+      return true;
+
+    case "DASHBOARD_AUTH":
+      // Dashboard pushed auth tokens via localStorage → content script → here
+      // Save tokens directly into chrome.storage.local so api.js can use them
+      (async () => {
+        try {
+          await chrome.storage.local.set({
+            wr_tokens: {
+              accessToken:  msg.tokens?.accessToken,
+              refreshToken: msg.tokens?.refreshToken,
+              userId:       msg.user?.id,
+              email:        msg.user?.email,
+            }
+          });
+          // Drain any queued sessions now that we have tokens
+          await drainQueue();
+          sendResponse({ success: true });
+        } catch(e){
+          sendResponse({ success: false, error: e.message });
+        }
+      })();
+      return true;
+
+    case "DASHBOARD_SESSION_START":
+      // Dashboard timer started → mirror in extension
+      (async () => {
+        try {
+          const payload = msg.payload || {};
+          // Set registered tabs from dashboard config
+          if(Array.isArray(payload.registeredTabs) && payload.registeredTabs.length > 0){
+            state.registeredTabs = payload.registeredTabs;
+          }
+          // Apply deep work settings from dashboard
+          if (payload.deepWork !== undefined) {
+            state.deepWorkEnabled = !!payload.deepWork;
+            if (Array.isArray(payload.blockList) && payload.blockList.length > 0) {
+              state.customBlockList = payload.blockList;
+            }
+          }
+          if(!state.isRunning){
+            startSession({
+              task:   payload.task   || "Dashboard session",
+              client: payload.client || "",
+              tags:   [],
+            });
+          }
+          sendResponse({ success: true });
+        } catch(e){
+          sendResponse({ success: false, error: e.message });
+        }
+      })();
+      return true;
+
+    case "DASHBOARD_SESSION_STOP":
+      // Dashboard timer stopped → stop extension session
+      (async () => {
+        try {
+          if(state.isRunning) await stopSession();
+          sendResponse({ success: true });
+        } catch(e){
+          sendResponse({ success: false, error: e.message });
+        }
+      })();
       return true;
 
     default:
@@ -634,7 +727,7 @@ function stopSession() {
 
   saveSession(session);
 
-  const preserved = { registeredTabs: state.registeredTabs, deepWorkEnabled: state.deepWorkEnabled };
+  const preserved = { registeredTabs: state.registeredTabs, deepWorkEnabled: state.deepWorkEnabled, customBlockList: state.customBlockList };
   state = { ...DEFAULT_STATE, ...preserved, lastActivityMs: Date.now() };
 
   updateBadge();
