@@ -945,82 +945,154 @@ function DeepWorkModal({active,onToggle,onClose}){
 ═══════════════════════════════════════════════════════════════════════════ */
 function ProfileDrawer({onClose,onToast,currentUser,onLogout,role,onUpdateProfile}){
   const displayName = currentUser?.name || currentUser?.email?.split("@")[0] || "";
-  const [name,setName]=useState(displayName||"");
-  const [email,setEmail]=useState(currentUser?.email||"");
-  const [rate,setRate]=useState(currentUser?.hourly_rate ?? 95);
-  const [avatarUrl,setAvatarUrl]=useState(currentUser?.avatar_url||"");
-  const [studioName,setStudioName]=useState(currentUser?.studio_name ?? "");
+  const [name,setName]           = useState(displayName||"");
+  const [email]                  = useState(currentUser?.email||"");
+  const [rate,setRate]           = useState(currentUser?.hourly_rate ?? 95);
+  const [avatarUrl,setAvatarUrl] = useState(currentUser?.avatar_url||"");
+  const [avatarPreview,setAvatarPreview] = useState(currentUser?.avatar_url||"");
+  const [studioName,setStudioName] = useState(currentUser?.studio_name ?? "");
+  const [saving,setSaving]       = useState(false);
+  const fileRef = useRef(null);
   const isClient = role==="client";
 
-  useEffect(() => {
-    setStudioName(currentUser?.studio_name ?? "");
-  }, [currentUser?.studio_name]);
+  useEffect(()=>{ setStudioName(currentUser?.studio_name ?? ""); },[currentUser?.studio_name]);
+
+  /* Local file → base64 preview */
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if(!file) return;
+    if(file.size > 2 * 1024 * 1024){ onToast("Image must be under 2MB","error"); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setAvatarPreview(ev.target.result);
+      setAvatarUrl(ev.target.result); // base64 stored as avatar_url
+    };
+    reader.readAsDataURL(file);
+  };
 
   const doSave = async () => {
+    setSaving(true);
     try {
-      if (onUpdateProfile) {
+      if(onUpdateProfile){
         const payload = { name: name || currentUser?.name, hourly_rate: rate };
-        if (avatarUrl !== (currentUser?.avatar_url || "")) payload.avatar_url = avatarUrl || null;
-        if (isClient && studioName !== undefined) payload.studio_name = studioName || null;
+        if(avatarUrl !== (currentUser?.avatar_url||"")) payload.avatar_url = avatarUrl || null;
+        if(isClient && studioName !== undefined) payload.studio_name = studioName || null;
         await onUpdateProfile(payload);
       }
       onToast("Profile updated");
       onClose();
-    } catch (e) {
-      onToast(e?.message || "Update failed", "error");
-    }
+    } catch(e){ onToast(e?.message||"Update failed","error"); }
+    finally{ setSaving(false); }
   };
 
   return(
     <div style={{position:"fixed",inset:0,zIndex:1000,display:"flex",justifyContent:"flex-end"}}
       onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
       <div style={{position:"absolute",inset:0,background:"rgba(24,23,15,.2)"}} onClick={onClose}/>
-      <div style={{position:"relative",background:C.surface,width:380,height:"100%",boxShadow:"-24px 0 48px rgba(0,0,0,.1)",display:"flex",flexDirection:"column",overflowY:"auto"}}>
+      <div style={{position:"relative",background:C.surface,width:400,height:"100%",boxShadow:"-24px 0 48px rgba(0,0,0,.1)",display:"flex",flexDirection:"column",overflowY:"auto"}}>
+        {/* Header */}
         <div style={{padding:"18px 24px",borderBottom:`1px solid ${C.borderLight}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <span style={{fontSize:15,fontWeight:600,color:C.text}}>{isClient ? "Client profile" : "Profile & settings"}</span>
+          <span style={{fontSize:15,fontWeight:600,color:C.text}}>{isClient?"Client profile":"Profile & settings"}</span>
           <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:20,color:C.muted}}>×</button>
         </div>
-        <div style={{padding:24,flex:1}}>
-          <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}>
-            <div style={{width:72,height:72,borderRadius:"50%",background:avatarUrl ? `url(${avatarUrl}) center/cover` : `linear-gradient(135deg,${C.accent},#0D5535)`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:24,fontWeight:700,marginBottom:10,overflow:"hidden"}}>
-              {!avatarUrl && ((name||displayName).charAt(0)||"?").toUpperCase()}
+
+        <div style={{padding:24,flex:1,display:"flex",flexDirection:"column",gap:0}}>
+          {/* Avatar upload */}
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:28}}>
+            <div style={{position:"relative",marginBottom:12}}>
+              <div style={{
+                width:88,height:88,borderRadius:"50%",overflow:"hidden",
+                background: avatarPreview ? "transparent" : `linear-gradient(135deg,${C.accent},#0D5535)`,
+                backgroundImage: avatarPreview ? `url(${avatarPreview})` : undefined,
+                backgroundSize:"cover", backgroundPosition:"center",
+                display:"flex",alignItems:"center",justifyContent:"center",
+                color:"#fff",fontSize:28,fontWeight:700,
+                border:`3px solid ${C.border}`,cursor:"pointer",
+              }} onClick={()=>fileRef.current?.click()}>
+                {!avatarPreview && ((name||displayName).charAt(0)||"?").toUpperCase()}
+              </div>
+              {/* Camera overlay */}
+              <div onClick={()=>fileRef.current?.click()} style={{
+                position:"absolute",bottom:0,right:0,
+                width:28,height:28,borderRadius:"50%",
+                background:C.accent,border:`2px solid ${C.surface}`,
+                display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",
+              }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+              </div>
             </div>
-            <div style={{fontSize:14,fontWeight:600,color:C.text}}>{name||displayName||"User"}</div>
-            <div style={{fontSize:12,color:C.muted,marginTop:2}}>{isClient ? "Viewing as client / hiring" : "Freelancer"}</div>
+            <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}} onChange={handleFileChange}/>
+            <button onClick={()=>fileRef.current?.click()} style={{...btn("ghost",{padding:"6px 16px",fontSize:12})}}>
+              Choose photo
+            </button>
+            {avatarPreview && (
+              <button onClick={()=>{setAvatarPreview("");setAvatarUrl("");}} style={{marginTop:4,background:"none",border:"none",fontSize:11,color:C.muted,cursor:"pointer",textDecoration:"underline"}}>
+                Remove photo
+              </button>
+            )}
+            <div style={{fontSize:11,color:C.muted,marginTop:4}}>JPG, PNG or GIF · max 2MB</div>
           </div>
-          <Field label="Profile photo">
-            <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-              <input style={{...inp,flex:1,minWidth:0}} value={avatarUrl} onChange={e=>setAvatarUrl(e.target.value)} placeholder="Image URL"/>
-              <button style={btn("ghost",{padding:"8px 12px"})} onClick={()=>setAvatarUrl("")}>Remove</button>
-            </div>
-            <p style={{fontSize:11,color:C.muted,marginTop:4}}>Paste an image URL, or remove to use initial.</p>
+
+          <Field label="Display name">
+            <input style={inp} value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/>
           </Field>
-          <Field label="Display name"><input style={inp} value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/></Field>
-          <Field label="Email"><input style={{...inp,opacity:.9}} value={email} readOnly placeholder="you@example.com"/></Field>
+          <Field label="Email">
+            <input style={{...inp,opacity:.7,cursor:"not-allowed"}} value={email} readOnly/>
+            <div style={{fontSize:11,color:C.muted,marginTop:3}}>Email cannot be changed here.</div>
+          </Field>
           {isClient && (
-            <Field label="Studio / Agency name" hint="Shown when you hire or approve time as a client">
-              <input style={inp} value={studioName ?? ""} onChange={e=>setStudioName(e.target.value)} placeholder="Your studio or agency"/>
+            <Field label="Studio / Agency name">
+              <input style={inp} value={studioName??""} onChange={e=>setStudioName(e.target.value)} placeholder="Your studio or agency"/>
             </Field>
           )}
-          {!isClient && <Field label="Default hourly rate ($)"><input style={inp} type="number" value={rate} onChange={e=>setRate(+e.target.value)} min={0}/></Field>}
-          {onLogout&&(
-            <div style={{marginTop:16,paddingTop:16,borderTop:`1px solid ${C.borderLight}`}}>
-              <button onClick={()=>{onLogout();onClose();}} style={{...btn("ghost",{width:"100%",fontSize:13})}}>Log out</button>
+          {!isClient && (
+            <Field label="Default hourly rate ($)">
+              <input style={inp} type="number" value={rate} onChange={e=>setRate(+e.target.value)} min={0}/>
+            </Field>
+          )}
+
+          {/* Extension sync token */}
+          {!isClient && (
+            <div style={{marginTop:20,padding:"16px",background:C.accentLight,border:`1px solid ${C.accentBorder}`,borderRadius:10}}>
+              <div style={{fontSize:12,fontWeight:600,color:C.accent,marginBottom:6,display:"flex",alignItems:"center",gap:6}}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Chrome Extension sync
+              </div>
+              <div style={{fontSize:12,color:C.sub,marginBottom:10,lineHeight:1.5}}>
+                Already logged in here? The extension picks up your session automatically — no separate login needed.
+              </div>
+              <button onClick={()=>{
+                const tok = {
+                  accessToken: localStorage.getItem("wr_access_token"),
+                  refreshToken: localStorage.getItem("wr_refresh_token"),
+                  user: currentUser,
+                  ts: Date.now(),
+                };
+                localStorage.setItem("wr_ext_handshake", JSON.stringify(tok));
+                onToast("Extension will sync on next open ✓");
+              }} style={btn("accent",{fontSize:12,padding:"7px 14px"})}>
+                Push credentials to extension
+              </button>
             </div>
           )}
-          <div style={{marginTop:20,paddingTop:20,borderTop:`1px solid ${C.borderLight}`}}>
-            <div style={LBL}>Integrations (optional)</div>
-            {["GitHub","LinkedIn","Twitter"].map(k=>(
-              <div key={k} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:`1px solid ${C.borderLight}`}}>
-                <span style={{fontSize:13,color:C.text,fontWeight:500}}>{k}</span>
-                <span style={{fontSize:12,fontWeight:500,color:C.muted}}>Not connected</span>
-              </div>
-            ))}
-          </div>
+
+          {onLogout && (
+            <div style={{marginTop:20,paddingTop:20,borderTop:`1px solid ${C.borderLight}`}}>
+              <button onClick={()=>{onLogout();onClose();}} style={{...btn("ghost",{width:"100%",fontSize:13})}}>
+                Log out
+              </button>
+            </div>
+          )}
         </div>
+
         <div style={{padding:"16px 24px",borderTop:`1px solid ${C.borderLight}`,display:"flex",gap:8}}>
           <button style={{...btn("ghost"),flex:1}} onClick={onClose}>Discard</button>
-          <button style={{...btn("primary"),flex:1}} onClick={doSave}>Save changes</button>
+          <button style={{...btn("primary"),flex:1}} onClick={doSave} disabled={saving}>
+            {saving?"Saving…":"Save changes"}
+          </button>
         </div>
       </div>
     </div>
@@ -1227,25 +1299,459 @@ function SessionRow({s, onInvoice, onExport, onAdjust, highlighted}){
 /* ═══════════════════════════════════════════════════════════════════════════
    TIMER PANEL
 ═══════════════════════════════════════════════════════════════════════════ */
-function TimerPanel({running,elapsed,onToggle,task,setTask}){
+/* ═══════════════════════════════════════════════════════════════════════════
+   START SESSION MODAL
+   Full verified-session setup. Shown when "Start timer" is clicked.
+   Captures: task, client, project, registered tabs, deep work, notes.
+   On confirm → starts live timer + syncs to extension if installed.
+═══════════════════════════════════════════════════════════════════════════ */
+/* ── Domain → app icon map ── */
+const DOMAIN_APP = {
+  "figma.com":{"label":"Figma","color":"#9747FF"},
+  "github.com":{"label":"GitHub","color":"#24292e"},
+  "gitlab.com":{"label":"GitLab","color":"#e24329"},
+  "notion.so":{"label":"Notion","color":"#000"},
+  "linear.app":{"label":"Linear","color":"#5E6AD2"},
+  "vercel.app":{"label":"Vercel","color":"#000"},
+  "railway.app":{"label":"Railway","color":"#0B0D0E"},
+  "netlify.app":{"label":"Netlify","color":"#00C7B7"},
+  "localhost":{"label":"Local dev","color":"#1B7A50"},
+  "127.0.0.1":{"label":"Local dev","color":"#1B7A50"},
+  "codepen.io":{"label":"CodePen","color":"#111"},
+  "codesandbox.io":{"label":"CodeSandbox","color":"#151515"},
+  "stackblitz.com":{"label":"StackBlitz","color":"#1389FD"},
+  "trello.com":{"label":"Trello","color":"#0052CC"},
+  "asana.com":{"label":"Asana","color":"#F06A6A"},
+  "docs.google.com":{"label":"Google Docs","color":"#4285F4"},
+  "drive.google.com":{"label":"Google Drive","color":"#4285F4"},
+  "airtable.com":{"label":"Airtable","color":"#2D7FF9"},
+  "miro.com":{"label":"Miro","color":"#FFD02F"},
+  "slack.com":{"label":"Slack","color":"#4A154B"},
+  "discord.com":{"label":"Discord","color":"#5865F2"},
+  "zoom.us":{"label":"Zoom","color":"#2D8CFF"},
+  "loom.com":{"label":"Loom","color":"#625DF5"},
+  "replit.com":{"label":"Replit","color":"#F26207"},
+};
+
+const DEFAULT_BLOCK_LIST = [
+  "twitter.com","x.com","reddit.com","youtube.com","instagram.com",
+  "facebook.com","tiktok.com","twitch.tv","linkedin.com",
+  "news.ycombinator.com","netflix.com","threads.net","snapchat.com",
+];
+
+function StartSessionModal({onClose, onStart, clients, currentUser}){
+  const clientList = Array.isArray(clients) ? clients : [];
+  const defaultRate = currentUser?.hourly_rate ?? 95;
+
+  const [step, setStep] = useState(1);
+  const [task,       setTask]       = useState("");
+  const [clientMode, setClientMode] = useState("registered");
+  const [clientId,   setClientId]   = useState(clientList[0]?.id   ?? null);
+  const [clientName, setClientName] = useState(clientList[0]?.name ?? "");
+  const [guestName,  setGuestName]  = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [project,    setProject]    = useState("");
+  const [rate,       setRate]       = useState(defaultRate);
+  const [notes,      setNotes]      = useState("");
+  const [tags,       setTags]       = useState([]);
+  const [openTabs,     setOpenTabs]     = useState([]);
+  const [tabsLoading,  setTabsLoading]  = useState(true);
+  const [tabsError,    setTabsError]    = useState(false);
+  const [selectedTabs, setSelectedTabs] = useState([]);
+  const [customTab,    setCustomTab]    = useState("");
+  const [deepWork,   setDeepWork]   = useState(false);
+  const [blockList,  setBlockList]  = useState([...DEFAULT_BLOCK_LIST]);
+  const [newBlock,   setNewBlock]   = useState("");
+
+  useEffect(()=>{
+    if(step !== 2) return;
+    setTabsLoading(true); setTabsError(false);
+    let done = false;
+    try {
+      window.postMessage({ type:"WR_GET_TABS_REQUEST" }, "*");
+      const handler = (e) => {
+        if(e.data?.type !== "WR_GET_TABS_RESPONSE") return;
+        done = true;
+        window.removeEventListener("message", handler);
+        const tabs = (e.data.tabs || []).filter(t => t.domain && !t.domain.startsWith("chrome"));
+        setOpenTabs(tabs);
+        const preselect = tabs.filter(t => !DEFAULT_BLOCK_LIST.some(b=>t.domain.includes(b))).map(t=>t.domain);
+        setSelectedTabs(prev => prev.length ? prev : preselect);
+        setTabsLoading(false);
+      };
+      window.addEventListener("message", handler);
+      setTimeout(()=>{ window.removeEventListener("message", handler); if(!done){ setOpenTabs([]); setTabsLoading(false); setTabsError(true); }}, 1500);
+    } catch(_){ setOpenTabs([]); setTabsLoading(false); setTabsError(true); }
+  }, [step]);
+
+  const toggleTab = (domain) => setSelectedTabs(p => p.includes(domain) ? p.filter(x=>x!==domain) : [...p, domain]);
+  const addCustomTab = () => {
+    const d = customTab.trim().replace(/^https?:\/\//,"").replace(/\/.*$/,"");
+    if(d && !selectedTabs.includes(d)){
+      setSelectedTabs(p=>[...p, d]);
+      if(!openTabs.some(t=>t.domain===d)) setOpenTabs(p=>[...p,{domain:d,title:d,favicon:null,active:false,manual:true}]);
+    }
+    setCustomTab("");
+  };
+  const addBlock = () => {
+    const d = newBlock.trim().replace(/^https?:\/\//,"").replace(/\/.*$/,"");
+    if(d && !blockList.includes(d)) setBlockList(p=>[...p, d]);
+    setNewBlock("");
+  };
+
+  const canProceed1 = task.trim().length > 0 &&
+    (clientMode === "none" ||
+     (clientMode === "registered" && clientId) ||
+     (clientMode === "guest" && guestName.trim() && /\S+@\S+\.\S+/.test(guestEmail)));
+
+  const confirm = () => {
+    const sessionConfig = {
+      task, project, notes, tags, rate,
+      client:      clientMode === "guest" ? guestName : clientName,
+      clientId:    clientMode === "registered" ? clientId : null,
+      guestEmail:  clientMode === "guest" ? guestEmail : null,
+      isGuest:     clientMode === "guest",
+      deepWork,    blockList,
+      registeredTabs: selectedTabs,
+      openTabsSnapshot: openTabs.map(t=>t.domain),
+      startTime: Date.now(),
+    };
+    onStart(sessionConfig);
+    onClose();
+  };
+
+  const steps = ["Session details","Browser tabs","Deep Work"];
+
   return(
-    <div style={{...card,border:running?`1.5px solid ${C.accentBorder}`:`1px solid ${C.border}`,background:running?"#F2FAF6":C.surface,transition:"all .3s"}}>
-      <div style={LBL}>Current session</div>
-      <input value={task} onChange={e=>setTask(e.target.value)} placeholder="What are you working on?"
-        style={{width:"100%",background:"transparent",border:"none",borderBottom:`1px solid ${C.borderLight}`,outline:"none",fontSize:17,fontWeight:500,color:C.text,paddingBottom:10,marginBottom:20,fontFamily:"inherit",boxSizing:"border-box"}}/>
-      <div style={{fontSize:46,fontWeight:600,letterSpacing:"-0.04em",color:running?C.accent:C.text,lineHeight:1,marginBottom:20,transition:"color .3s",fontVariantNumeric:"tabular-nums"}}>
+    <Modal title="Start verified session" onClose={onClose} width={600}>
+      <div style={{display:"flex",marginBottom:24,borderRadius:10,overflow:"hidden",border:`1px solid ${C.border}`}}>
+        {steps.map((label,i)=>(
+          <button key={i} onClick={()=>{ if(i===0||(i>=1&&task.trim())) setStep(i+1); }} style={{
+            flex:1, padding:"9px 8px", border:"none", cursor:"pointer", fontFamily:"inherit",
+            fontSize:11, fontWeight:700, letterSpacing:".02em",
+            background: step===i+1 ? C.accent : step>i+1 ? C.accentLight : C.bg,
+            color: step===i+1 ? "#fff" : step>i+1 ? C.accent : C.muted,
+            borderRight: i<2 ? `1px solid ${C.border}` : "none",
+            transition:"all .15s",
+          }}>
+            {step>i+1?"✓ ":""}{i+1}. {label}
+          </button>
+        ))}
+      </div>
+
+      {step===1 && (
+        <div style={{display:"flex",flexDirection:"column",gap:16}}>
+          <Field label="What are you working on? *">
+            <input style={inp} autoFocus value={task} onChange={e=>setTask(e.target.value)} placeholder="e.g. Dashboard redesign, API integration…"/>
+          </Field>
+          <Field label="Client">
+            <div style={{display:"flex",gap:6,marginBottom:10}}>
+              {[{id:"none",label:"No client"},{id:"registered",label:"Existing client"},{id:"guest",label:"New / guest client"}].map(opt=>(
+                <button key={opt.id} onClick={()=>setClientMode(opt.id)} style={{
+                  flex:1, padding:"7px 8px", borderRadius:8, border:`1.5px solid ${clientMode===opt.id?C.accent:C.border}`,
+                  background:clientMode===opt.id?C.accentLight:C.bg, color:clientMode===opt.id?C.accent:C.sub,
+                  fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"inherit", transition:"all .15s",
+                }}>{opt.label}</button>
+              ))}
+            </div>
+            {clientMode==="registered" && (
+              clientList.length > 0
+                ? <select style={inp} value={clientId||""} onChange={e=>{ const c=clientList.find(x=>String(x.id)===e.target.value); setClientName(c?.name||""); setClientId(c?.id||null); }}>
+                    <option value="">Select client…</option>
+                    {clientList.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                : <div style={{padding:"10px 12px",background:C.warnLight,border:`1px solid ${C.warnBorder}`,borderRadius:8,fontSize:12,color:C.warn}}>No clients yet. Add them in the Clients tab, or use "New / guest client".</div>
+            )}
+            {clientMode==="guest" && (
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                <input style={inp} value={guestName} onChange={e=>setGuestName(e.target.value)} placeholder="Client name"/>
+                <input style={inp} type="email" value={guestEmail} onChange={e=>setGuestEmail(e.target.value)} placeholder="Client email (required)"/>
+                <div style={{display:"flex",gap:8,padding:"10px 12px",background:"#EFF6FF",border:"1px solid #BFDBFE",borderRadius:8,alignItems:"flex-start"}}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round" style={{marginTop:1,flexShrink:0}}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                  <div style={{fontSize:11,color:"#1D4ED8",lineHeight:1.5}}>
+                    <strong>Invoice + proof report will be emailed to this address.</strong><br/>They'll receive an invite to view and approve time — no signup required to approve.
+                  </div>
+                </div>
+              </div>
+            )}
+          </Field>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+            <Field label="Project / milestone">
+              <input style={inp} value={project} onChange={e=>setProject(e.target.value)} placeholder="Sprint 4, Feature X…"/>
+            </Field>
+            <Field label="Rate for this session ($/hr)">
+              <div style={{position:"relative"}}>
+                <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:13,color:C.muted,fontWeight:600}}>$</span>
+                <input style={{...inp,paddingLeft:22}} type="number" min={0} value={rate} onChange={e=>setRate(+e.target.value)}/>
+              </div>
+            </Field>
+          </div>
+          <Field label="Tags">
+            <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:6}}>{tags.map(t=><Tag key={t} onRemove={()=>setTags(p=>p.filter(x=>x!==t))}>{t}</Tag>)}</div>
+            <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+              {TAG_OPTS.filter(t=>!tags.includes(t)).map(t=>(<button key={t} onClick={()=>setTags(p=>[...p,t])} style={btn("ghost",{padding:"3px 10px",fontSize:11,borderRadius:99})}>{t}</button>))}
+            </div>
+          </Field>
+          <Field label="Notes (optional)">
+            <textarea style={{...inp,height:52,resize:"none"}} value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Context, goals, links…"/>
+          </Field>
+        </div>
+      )}
+
+      {step===2 && (
+        <div style={{display:"flex",flexDirection:"column",gap:18}}>
+          <div style={{fontSize:13,color:C.sub,lineHeight:1.6}}>
+            Select which <strong style={{color:C.text}}>currently open tabs</strong> count as work time. Only verified time on these domains is billed.
+          </div>
+          {tabsLoading && (
+            <div style={{textAlign:"center",padding:"32px 0",color:C.muted}}>
+              <div style={{width:28,height:28,border:`3px solid ${C.border}`,borderTopColor:C.accent,borderRadius:"50%",animation:"spin .8s linear infinite",margin:"0 auto 12px"}}/>
+              <div style={{fontSize:13}}>Reading open browser tabs…</div>
+            </div>
+          )}
+          {!tabsLoading && tabsError && (
+            <div style={{padding:"14px 16px",background:C.warnLight,border:`1px solid ${C.warnBorder}`,borderRadius:10,fontSize:13,color:C.warn,lineHeight:1.6}}>
+              <strong>Extension not detected.</strong> Install the WorkRate Chrome extension to auto-detect open tabs, or add domains manually below.
+            </div>
+          )}
+          {!tabsLoading && openTabs.length > 0 && (
+            <div>
+              <div style={LBL}>Open browser tabs ({openTabs.length})</div>
+              <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:260,overflowY:"auto"}}>
+                {openTabs.map((t,i)=>{
+                  const on = selectedTabs.includes(t.domain);
+                  const app = DOMAIN_APP[t.domain];
+                  const isDistraction = DEFAULT_BLOCK_LIST.some(b=>t.domain.includes(b));
+                  return(
+                    <button key={i} onClick={()=>toggleTab(t.domain)} style={{
+                      display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderRadius:10,
+                      border:`1.5px solid ${on?C.accent+"55":C.border}`,background:on?C.accent+"12":C.bg,
+                      cursor:"pointer",transition:"all .15s",width:"100%",fontFamily:"inherit",
+                      opacity:isDistraction?.6:1,
+                    }}>
+                      <div style={{width:22,height:22,borderRadius:6,background:app?.color||C.border,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}>
+                        {t.favicon
+                          ? <img src={t.favicon} width={16} height={16} style={{borderRadius:3}} onError={e=>{e.target.style.display="none";}}/>
+                          : <span style={{fontSize:9,fontWeight:700,color:"#fff"}}>{(app?.label||t.domain).charAt(0).toUpperCase()}</span>}
+                      </div>
+                      <div style={{flex:1,textAlign:"left",minWidth:0}}>
+                        <div style={{fontSize:12,fontWeight:600,color:on?C.accent:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                          {app?.label||t.domain}
+                          {t.active && <span style={{marginLeft:6,fontSize:10,background:C.accentLight,color:C.accent,padding:"1px 6px",borderRadius:99,border:`1px solid ${C.accentBorder}`}}>Active</span>}
+                          {isDistraction && <span style={{marginLeft:6,fontSize:10,background:C.dangerLight,color:C.danger,padding:"1px 6px",borderRadius:99}}>Distraction</span>}
+                        </div>
+                        <div style={{fontSize:11,color:C.muted,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.domain}</div>
+                      </div>
+                      <div style={{width:18,height:18,borderRadius:"50%",border:`2px solid ${on?C.accent:C.border}`,background:on?C.accent:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all .15s"}}>
+                        {on&&<svg width="9" height="9" viewBox="0 0 14 14" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M2 7l3 4 6-8"/></svg>}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          <Field label="Add domain manually">
+            <div style={{display:"flex",gap:8}}>
+              <input style={{...inp,flex:1}} value={customTab} onChange={e=>setCustomTab(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addCustomTab()} placeholder="e.g. myapp.com, localhost:3000"/>
+              <button style={btn("accent",{padding:"9px 14px",flexShrink:0})} onClick={addCustomTab}>Add</button>
+            </div>
+          </Field>
+          {selectedTabs.length > 0 && (
+            <div style={{padding:"10px 14px",background:C.accentLight,border:`1px solid ${C.accentBorder}`,borderRadius:10}}>
+              <div style={{fontSize:11,fontWeight:700,color:C.accent,marginBottom:6,textTransform:"uppercase",letterSpacing:".07em"}}>{selectedTabs.length} tab{selectedTabs.length!==1?"s":""} registered</div>
+              <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                {selectedTabs.map(d=>(
+                  <div key={d} style={{display:"flex",alignItems:"center",gap:4,background:"#fff",border:`1px solid ${C.accentBorder}`,borderRadius:99,padding:"3px 10px",fontSize:11,fontWeight:600,color:C.accent}}>
+                    {d}<button onClick={()=>setSelectedTabs(p=>p.filter(x=>x!==d))} style={{background:"none",border:"none",cursor:"pointer",color:C.accent,fontSize:13,lineHeight:1,padding:"0 0 0 2px"}}>×</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {step===3 && (
+        <div style={{display:"flex",flexDirection:"column",gap:18}}>
+          <div onClick={()=>setDeepWork(d=>!d)} style={{
+            display:"flex",alignItems:"center",justifyContent:"space-between",
+            padding:"16px 18px",borderRadius:12,cursor:"pointer",transition:"all .2s",
+            border:`2px solid ${deepWork?"#7C3AED":C.border}`,background:deepWork?"#F5F3FF":C.bg,
+          }}>
+            <div style={{display:"flex",alignItems:"center",gap:14}}>
+              <div style={{width:44,height:44,borderRadius:12,background:deepWork?"#7C3AED":"#EDE9FE",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .2s"}}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={deepWork?"#fff":"#7C3AED"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+              </div>
+              <div>
+                <div style={{fontSize:14,fontWeight:700,color:deepWork?"#7C3AED":C.text}}>Deep Work Mode</div>
+                <div style={{fontSize:12,color:C.sub,marginTop:2}}>{deepWork?"Active — distraction sites blocked immediately":"Off — all sites accessible"}</div>
+              </div>
+            </div>
+            <div style={{width:44,height:24,borderRadius:99,transition:"all .2s",position:"relative",flexShrink:0,background:deepWork?"#7C3AED":C.border}}>
+              <div style={{position:"absolute",top:3,width:18,height:18,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 1px 4px rgba(0,0,0,.25)",left:deepWork?23:3}}/>
+            </div>
+          </div>
+          {deepWork && (
+            <>
+              <div style={{padding:"10px 14px",background:"#FEF3C7",border:"1px solid #FDE68A",borderRadius:10,fontSize:12,color:"#92400E",lineHeight:1.6}}>
+                <strong>How it works:</strong> Any tab switch to a blocked domain is <strong>immediately redirected</strong> to a lock screen. Blocked attempts are logged in your proof report and reduce your WQI.
+              </div>
+              <Field label={`Blocked domains (${blockList.length})`}>
+                <div style={{maxHeight:180,overflowY:"auto",display:"flex",flexDirection:"column",gap:5,marginBottom:10}}>
+                  {blockList.map(d=>(
+                    <div key={d} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"7px 12px",background:C.dangerLight,border:`1px solid ${C.dangerBorder}`,borderRadius:8}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={C.danger} strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                        <span style={{fontSize:12,fontWeight:600,color:C.danger}}>{d}</span>
+                      </div>
+                      <button onClick={()=>setBlockList(p=>p.filter(x=>x!==d))} style={{background:"none",border:"none",cursor:"pointer",color:C.muted,fontSize:15,lineHeight:1}}>×</button>
+                    </div>
+                  ))}
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <input style={{...inp,flex:1}} value={newBlock} onChange={e=>setNewBlock(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addBlock()} placeholder="Add domain e.g. netflix.com"/>
+                  <button style={btn("danger",{padding:"9px 14px",flexShrink:0})} onClick={addBlock}>Block</button>
+                </div>
+              </Field>
+            </>
+          )}
+          {!deepWork && (
+            <div style={{textAlign:"center",padding:"24px 0",color:C.muted}}>
+              <div style={{fontSize:32,marginBottom:10}}>🔓</div>
+              <div style={{fontSize:13}}>Deep Work is off. Toggle on to enforce focus.</div>
+            </div>
+          )}
+          <div style={{background:C.bg,border:`1px solid ${C.borderLight}`,borderRadius:10,padding:"14px 16px"}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:".07em",marginBottom:10}}>Ready to start</div>
+            <div style={{display:"flex",flexDirection:"column",gap:5}}>
+              <div style={{fontSize:13,fontWeight:600,color:C.text}}>{task}</div>
+              {clientMode!=="none" && <div style={{fontSize:12,color:C.sub}}>Client: {clientMode==="guest"?`${guestName} (${guestEmail})`:clientName}</div>}
+              {project && <div style={{fontSize:12,color:C.sub}}>Project: {project}</div>}
+              <div style={{fontSize:12,color:C.sub}}>Rate: ${rate}/hr · {selectedTabs.length} registered tab{selectedTabs.length!==1?"s":""}</div>
+              <div style={{fontSize:12,fontWeight:600,color:deepWork?"#7C3AED":C.muted}}>Deep Work: {deepWork?`ON — ${blockList.length} domains blocked`:"OFF"}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{display:"flex",gap:8,justifyContent:"space-between",marginTop:22}}>
+        <button style={btn("ghost")} onClick={onClose}>Cancel</button>
+        <div style={{display:"flex",gap:8}}>
+          {step>1 && <button style={btn("ghost")} onClick={()=>setStep(s=>s-1)}>← Back</button>}
+          {step<3 && <button style={btn("primary")} onClick={()=>{if(step===1&&!canProceed1)return;setStep(s=>s+1);}} disabled={step===1&&!canProceed1}>Next →</button>}
+          {step===3 && (
+            <button style={btn("primary",{display:"flex",alignItems:"center",gap:8,padding:"10px 22px"})} onClick={confirm}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+              Start session
+            </button>
+          )}
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+
+function TimerPanel({running,elapsed,onStartClick,onStop,sessionConfig,liveWqi}){
+  // Simulated live breakdown (replace with real extension data when synced)
+  const verifiedPct = running ? Math.min(93, 78 + Math.floor(elapsed/120)) : 0;
+  const offTabPct   = running ? Math.max(3, 12 - Math.floor(elapsed/200)) : 0;
+  const idlePct     = running ? Math.max(2, 10 - Math.floor(elapsed/180)) : 0;
+  const tabs        = sessionConfig?.registeredTabs ?? [];
+
+  if(!running){
+    return(
+      <div style={{...card,border:`1px solid ${C.border}`,background:C.surface}}>
+        <div style={LBL}>Current session</div>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"28px 0",gap:16}}>
+          <div style={{fontSize:52,fontWeight:700,color:C.border,letterSpacing:"-0.04em",fontVariantNumeric:"tabular-nums"}}>
+            00:00:00
+          </div>
+          <p style={{fontSize:13,color:C.muted,textAlign:"center",maxWidth:280,lineHeight:1.6}}>
+            Start a verified session to begin tracking. You'll set up client details, project, and registered tabs.
+          </p>
+          <button onClick={onStartClick} style={btn("primary",{padding:"11px 28px",fontSize:14,display:"flex",alignItems:"center",gap:8})}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+            Start session
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return(
+    <div style={{...card,border:`1.5px solid ${C.accentBorder}`,background:"#F2FAF6",transition:"all .3s"}}>
+      {/* Header row */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
+        <div>
+          <div style={LBL}>Live session</div>
+          <div style={{fontSize:15,fontWeight:600,color:C.text,marginTop:2}}>{sessionConfig?.task||"Untitled session"}</div>
+          {sessionConfig?.client && <div style={{fontSize:12,color:C.sub,marginTop:1}}>{sessionConfig.client}{sessionConfig.project ? ` · ${sessionConfig.project}`:""}</div>}
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6,background:C.accentLight,border:`1px solid ${C.accentBorder}`,borderRadius:99,padding:"4px 12px"}}>
+          <span style={{width:7,height:7,borderRadius:"50%",background:C.accent,display:"inline-block",animation:"wr-blink 1.4s infinite"}}/>
+          <span style={{fontSize:11,fontWeight:700,color:C.accent}}>RECORDING</span>
+        </div>
+      </div>
+
+      {/* Big timer */}
+      <div style={{fontSize:48,fontWeight:700,letterSpacing:"-0.05em",color:C.accent,lineHeight:1,marginBottom:18,fontVariantNumeric:"tabular-nums"}}>
         {fmt(elapsed)}
       </div>
-      <div style={{display:"flex",alignItems:"center",gap:14}}>
-        <button onClick={onToggle} style={btn(running?"danger":"primary",{padding:"10px 26px"})}>
-          {running?"Stop":"Start timer"}
+
+      {/* Live breakdown bar */}
+      <div style={{marginBottom:14}}>
+        <div style={{height:8,borderRadius:99,overflow:"hidden",display:"flex",gap:2,background:C.borderLight,marginBottom:8}}>
+          <div style={{width:`${verifiedPct}%`,background:C.accent,borderRadius:"99px 0 0 99px",transition:"width 1s"}}/>
+          <div style={{width:`${offTabPct}%`,background:C.warn,transition:"width 1s"}}/>
+          <div style={{width:`${idlePct}%`,background:C.danger,borderRadius:"0 99px 99px 0",transition:"width 1s"}}/>
+        </div>
+        <div style={{display:"flex",gap:14}}>
+          {[
+            {label:"Verified",pct:verifiedPct,color:C.accent},
+            {label:"Off-tab", pct:offTabPct,  color:C.warn},
+            {label:"Idle",    pct:idlePct,    color:C.danger},
+          ].map(x=>(
+            <div key={x.label} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:C.sub}}>
+              <span style={{width:7,height:7,borderRadius:"50%",background:x.color,display:"inline-block"}}/>
+              {x.pct}% {x.label}
+            </div>
+          ))}
+          <div style={{marginLeft:"auto",fontSize:11,fontWeight:700,color:liveWqi>=85?C.accent:liveWqi>=70?C.warn:C.danger}}>
+            WQI {liveWqi}
+          </div>
+        </div>
+      </div>
+
+      {/* Registered tabs */}
+      {tabs.length > 0 && (
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:16}}>
+          {tabs.map(t=>(
+            <div key={t} style={{fontSize:11,fontWeight:600,padding:"3px 10px",borderRadius:99,background:C.accentLight,color:C.accent,border:`1px solid ${C.accentBorder}`,display:"flex",alignItems:"center",gap:4}}>
+              <span style={{width:5,height:5,borderRadius:"50%",background:C.accent,display:"inline-block",animation:"wr-blink 1.4s infinite"}}/>
+              {t}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Waveform */}
+      <div style={{display:"flex",gap:3,alignItems:"flex-end",height:20,marginBottom:16}}>
+        {Array.from({length:22},(_,i)=>{
+          const h = 4 + Math.abs(Math.sin(Date.now()/800 + i*0.7)) * 14;
+          return <div key={i} style={{flex:1,height:`${h}px`,background:C.accent,borderRadius:2,opacity:.5,animation:`wr-pulse ${.4+i*.05}s ease-in-out infinite alternate`}}/>;
+        })}
+      </div>
+
+      {/* Stop button */}
+      <div style={{display:"flex",gap:10,alignItems:"center"}}>
+        <button onClick={onStop} style={btn("danger",{padding:"10px 26px"})}>
+          Stop session
         </button>
-        {running&&(
-          <div style={{display:"flex",gap:3,alignItems:"center"}}>
-            {[12,18,14,20,16].map((h,i)=>(
-              <div key={i} style={{width:3,height:h,background:C.accent,borderRadius:2,opacity:.55,animation:`wr-pulse ${.5+i*.1}s ease-in-out infinite alternate`}}/>
-            ))}
-            <span style={{fontSize:12,color:C.accent,fontWeight:500,marginLeft:8}}>Recording</span>
+        {sessionConfig?.deepWork && (
+          <div style={{fontSize:12,fontWeight:600,color:C.warn,display:"flex",alignItems:"center",gap:5}}>
+            🔥 Deep Work active
           </div>
         )}
       </div>
@@ -1581,9 +2087,11 @@ export default function WorkRate({
   }, []);
 
   /* ── Timer ── */
-  const [running,setRunning] = useState(false);
-  const [elapsed,setElapsed] = useState(0);
-  const [task,setTask]       = useState("");
+  const [running,setRunning]         = useState(false);
+  const [elapsed,setElapsed]         = useState(0);
+  const [task,setTask]               = useState("");
+  const [sessionConfig,setSessionConfig] = useState(null); // full session setup from StartSessionModal
+  const [deepWork,setDeepWork]       = useState(false);
   const iv = useRef(null);
   useEffect(()=>{
     if(running) iv.current=setInterval(()=>setElapsed(e=>e+1),1000);
@@ -1591,8 +2099,75 @@ export default function WorkRate({
     return()=>clearInterval(iv.current);
   },[running]);
 
-  /* ── Deep work ── */
-  const [deepWork,setDeepWork]=useState(false);
+  /* ── Extension bidirectional sync ──────────────────────────────────────
+     Strategy: localStorage key "wr_ext_handshake" carries auth tokens so
+     the extension's content script can read them without a separate login.
+     When a session starts/stops, we write to "wr_dashboard_session" which
+     the extension service worker polls every 5s.
+  ─────────────────────────────────────────────────────────────────────── */
+  const broadcastToExtension = (type, payload = {}) => {
+    try {
+      localStorage.setItem("wr_dashboard_session", JSON.stringify({ type, payload, ts: Date.now() }));
+    } catch(_){}
+  };
+
+  // On mount: write tokens to localStorage so extension can pick them up
+  useEffect(()=>{
+    if(!currentUser) return;
+    try {
+      const existing = localStorage.getItem("wr_ext_handshake");
+      const parsed = existing ? JSON.parse(existing) : null;
+      // Refresh every hour
+      if(!parsed || Date.now() - (parsed.ts||0) > 3600000){
+        localStorage.setItem("wr_ext_handshake", JSON.stringify({
+          accessToken: localStorage.getItem("wr_access_token"),
+          refreshToken: localStorage.getItem("wr_refresh_token"),
+          user: currentUser,
+          ts: Date.now(),
+        }));
+      }
+    } catch(_){}
+  },[currentUser]);
+
+  /* ── Start session (from StartSessionModal confirm) ── */
+  const startSession = (config) => {
+    setSessionConfig(config);
+    setTask(config.task || "");
+    setDeepWork(config.deepWork || false);
+    setElapsed(0);
+    setRunning(true);
+    broadcastToExtension("SESSION_START", {
+      task: config.task,
+      client: config.client,
+      project: config.project,
+      registeredTabs: config.registeredTabs,
+      deepWork: config.deepWork,
+      blockList: config.blockList,
+      startTime: config.startTime,
+    });
+    // Activate deep work in extension immediately
+    if(config.deepWork){
+      try {
+        window.postMessage({ type:"WR_SET_DEEP_WORK", enabled:true, blockList: config.blockList }, "*");
+      } catch(_){}
+    }
+  };
+
+  /* ── Stop session ── */
+  const stopSession = () => {
+    setRunning(false);
+    const wqi = Math.min(97, 84 + Math.floor(elapsed / 90));
+    const summary = generateAISummary(
+      task || "Untitled session", elapsed, wqi,
+      rand(2,8), rand(4,18),
+      sessionConfig?.client || "Client"
+    );
+    setAiSummary(summary);
+    setModal("aiSummary");
+    broadcastToExtension("SESSION_STOP", { elapsed, wqi });
+    setElapsed(0);
+    setSessionConfig(null);
+  };
 
   /* ── Sessions ── */
   // Clean slate: only API data. New users see empty dashboard; no dummy data.
@@ -1625,18 +2200,7 @@ export default function WorkRate({
   const [toast,setToast]=useState(null);
   const showToast=(msg,type="success")=>setToast({msg,type});
 
-  /* ── Timer stop → AI summary ── */
-  const toggleTimer=()=>{
-    if(running){
-      const summary=generateAISummary(task||"Untitled session",elapsed,Math.min(97,84+Math.floor(elapsed/90)),rand(2,8),rand(4,18),sessions[0]?.client||"Client");
-      setAiSummary(summary);
-      setModal("aiSummary");
-      setElapsed(0);
-    }
-    setRunning(r=>!r);
-  };
-
-  const liveWqi = running?Math.min(97,84+Math.floor(elapsed/90)):84;
+  const liveWqi = running ? Math.min(97, 84 + Math.floor(elapsed/90)) : 84;
 
   /* ── Session actions ── */
   const addSession=async(s)=>{
@@ -1695,7 +2259,8 @@ export default function WorkRate({
       {toast&&<Toast message={toast.msg} type={toast.type} onDone={()=>setToast(null)}/>}
 
       {/* ── Modals ── */}
-      {modal==="aiSummary"  && aiSummary && <AISummaryModal summary={aiSummary} task={task} onClose={closeModal} onInvoice={()=>{setModalTarget(sessions[0]);setModal("invoice");}} onSave={()=>{addSession({id:Date.now(),date:"Today",task:task||"Untitled session",start:"—",end:"—",duration:aiSummary.total*3600,wqi:aiSummary.wqi,switches:aiSummary.switches,idle:aiSummary.idleRatio,tags:[],client:"Volta Studio",approved:false,shared:false});setTask("");}}/>}
+      {modal==="startSession" && <StartSessionModal onClose={closeModal} onStart={startSession} clients={serverClients??[]} currentUser={currentUser}/>}
+      {modal==="aiSummary"  && aiSummary && <AISummaryModal summary={aiSummary} task={task} onClose={closeModal} onInvoice={()=>{setModalTarget(sessions[0]);setModal("invoice");}} onSave={()=>{addSession({id:Date.now(),date:"Today",task:task||"Untitled session",start:"—",end:"—",duration:aiSummary.total*3600,wqi:aiSummary.wqi,switches:aiSummary.switches,idle:aiSummary.idleRatio,tags:[],client:sessionConfig?.client||"Volta Studio",approved:false,shared:false});setTask("");setSessionConfig(null);}}/>}
       {modal==="newSession" && <NewSessionModal onClose={closeModal} onSave={addSession} clients={serverClients ?? []} onLookupClients={onLookupClients}/>}
       {modal==="invoice"    && modalTarget && <InvoiceModal session={modalTarget} onClose={closeModal} onToast={showToast} currentUser={currentUser}/>}
       {modal==="export"     && modalTarget && <ExportModal  session={modalTarget} onClose={closeModal} onToast={showToast}/>}
@@ -1828,7 +2393,7 @@ export default function WorkRate({
             </div>
 
             <div style={{display:"grid",gridTemplateColumns:"1fr 172px",gap:14}}>
-              <TimerPanel running={running} elapsed={elapsed} onToggle={toggleTimer} task={task} setTask={setTask}/>
+              <TimerPanel running={running} elapsed={elapsed} onStartClick={()=>setModal("startSession")} onStop={stopSession} sessionConfig={sessionConfig} liveWqi={liveWqi}/>
               <div style={{...card,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
                 <div style={LBL}>Session score</div>
                 <WQIRing score={liveWqi}/>
