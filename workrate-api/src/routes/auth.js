@@ -37,7 +37,15 @@ router.post('/register', async (req, res) => {
       [email.toLowerCase(), hash, name || '']
     );
 
-    const user         = rows[0];
+    const user = rows[0];
+    
+    // Auto-create Client and Freelancer profiles for new user
+    await query(
+      `INSERT INTO clients (user_id, name, email) VALUES ($1, $2, $3), ($1, $4, $3)
+       ON CONFLICT DO NOTHING`,
+      [user.id, 'Client', email.toLowerCase(), 'Freelancer']
+    );
+
     const accessToken  = issueAccessToken(user);
     const refreshToken = await issueRefreshToken(user.id, 'Web');
 
@@ -109,7 +117,7 @@ router.post('/logout', requireAuth, async (req, res) => {
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT id, email, name, plan, hourly_rate, avatar_url, timezone, studio_name, created_at
+      `SELECT id, email, name, plan, hourly_rate, avatar_url, timezone, studio_name, github_url, linkedin_url, twitter_url, created_at
        FROM users WHERE id = $1`,
       [req.user.id]
     );
@@ -123,7 +131,7 @@ router.get('/me', requireAuth, async (req, res) => {
 /* ── PATCH /api/auth/me ─────────────────────────────────────────────── */
 router.patch('/me', requireAuth, async (req, res) => {
   try {
-    const { name, hourly_rate, timezone, avatar_url, studio_name } = req.body;
+    const { name, hourly_rate, timezone, avatar_url, studio_name, github_url, linkedin_url, twitter_url } = req.body;
     const updates = [
       'name = COALESCE($1, name)',
       'hourly_rate = COALESCE($2, hourly_rate)',
@@ -141,9 +149,24 @@ router.patch('/me', requireAuth, async (req, res) => {
       params.push(studio_name);
       idx++;
     }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'github_url')) {
+      updates.push(`github_url = $${idx}`);
+      params.push(github_url);
+      idx++;
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'linkedin_url')) {
+      updates.push(`linkedin_url = $${idx}`);
+      params.push(linkedin_url);
+      idx++;
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'twitter_url')) {
+      updates.push(`twitter_url = $${idx}`);
+      params.push(twitter_url);
+      idx++;
+    }
     params.push(req.user.id);
     const { rows } = await query(
-      `UPDATE users SET ${updates.join(', ')} WHERE id = $${params.length} RETURNING id, email, name, plan, hourly_rate, timezone, avatar_url, studio_name`,
+      `UPDATE users SET ${updates.join(', ')} WHERE id = $${params.length} RETURNING id, email, name, plan, hourly_rate, timezone, avatar_url, studio_name, github_url, linkedin_url, twitter_url`,
       params
     );
     return res.json({ user: rows[0] });

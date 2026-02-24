@@ -146,77 +146,16 @@ function normalizeExtensionSession(raw) {
   };
 }
 
-const INIT_SESSIONS = [
-  {id:1,date:"Today",     task:"Dashboard UI Redesign",    start:"09:12",end:"12:47",
-    verifiedSec:12900,wallSec:14400,offTabSec:900,idleSec:600,
-    verifiedPct:90,offTabPct:6,idlePct:4,duration:12900,wqi:87,
-    switches:4,idle:8,tags:["Design","React"],client:"Volta Studio",
-    approved:false,shared:true,
-    registeredTabs:[{domain:"figma.com",title:"Dashboard v3 – Figma"},{domain:"github.com",title:"volta-studio/dashboard"}],
-    offTabEvents:[{domain:"gmail.com",durationSec:240},{domain:"slack.com",durationSec:320},{domain:"twitter.com",durationSec:340}],
-    activityBlocks:[]},
-  {id:2,date:"Today",     task:"API Integration & Testing",start:"14:03",end:"17:30",
-    verifiedSec:12420,wallSec:13500,offTabSec:720,idleSec:360,
-    verifiedPct:92,offTabPct:5,idlePct:3,duration:12420,wqi:92,
-    switches:2,idle:4,tags:["Backend"],client:"Volta Studio",
-    approved:true,shared:true,
-    registeredTabs:[{domain:"localhost:3000",title:"API Dev Server"},{domain:"github.com",title:"volta-studio/api"}],
-    offTabEvents:[{domain:"stackoverflow.com",durationSec:480},{domain:"notion.so",durationSec:240}],
-    activityBlocks:[]},
-  {id:3,date:"Yesterday", task:"Component Library Setup",  start:"10:00",end:"13:15",
-    verifiedSec:11700,wallSec:12900,offTabSec:900,idleSec:300,
-    verifiedPct:85,offTabPct:8,idlePct:7,duration:11700,wqi:78,
-    switches:7,idle:12,tags:["React"],client:"Melon Co.",
-    approved:false,shared:true,
-    registeredTabs:[{domain:"storybook.melon.co",title:"Component Library"}],
-    offTabEvents:[{domain:"youtube.com",durationSec:600},{domain:"reddit.com",durationSec:300}],
-    activityBlocks:[]},
-  {id:4,date:"Feb 21",    task:"Client Review Session",    start:"15:00",end:"16:30",
-    verifiedSec:5400,wallSec:5400,offTabSec:0,idleSec:1188,
-    verifiedPct:78,offTabPct:0,idlePct:22,duration:5400,wqi:65,
-    switches:11,idle:22,tags:["Meeting"],client:"Melon Co.",
-    approved:true,shared:false,
-    registeredTabs:[{domain:"meet.google.com",title:"Client Review — Melon Co."}],
-    offTabEvents:[],activityBlocks:[]},
-  {id:5,date:"Feb 20",    task:"Auth Flow Implementation", start:"09:00",end:"12:30",
-    verifiedSec:12600,wallSec:12960,offTabSec:240,idleSec:120,
-    verifiedPct:97,offTabPct:2,idlePct:1,duration:12600,wqi:89,
-    switches:3,idle:6,tags:["Backend","React"],client:"Orbit Labs",
-    approved:false,shared:true,
-    registeredTabs:[{domain:"localhost:8080",title:"Auth Service"},{domain:"github.com",title:"orbit-labs/auth"}],
-    offTabEvents:[{domain:"docs.github.com",durationSec:240}],activityBlocks:[]},
-  {id:6,date:"Feb 19",    task:"Design System Tokens",     start:"10:30",end:"14:00",
-    verifiedSec:12600,wallSec:12780,offTabSec:120,idleSec:60,
-    verifiedPct:97,offTabPct:1,idlePct:2,duration:12600,wqi:94,
-    switches:1,idle:3,tags:["Design"],client:"Volta Studio",
-    approved:true,shared:true,
-    registeredTabs:[{domain:"figma.com",title:"Design Tokens – Volta"}],
-    offTabEvents:[{domain:"notion.so",durationSec:120}],activityBlocks:[]},
-];
+// Clean slate - no dummy data. All sessions come from API.
+const INIT_SESSIONS = [];
 
-const MILESTONES = [
-  {id:1,client:"Volta Studio",title:"MVP Launch",due:"Mar 15",progress:68,hours:42,budget:5000},
-  {id:2,client:"Volta Studio",title:"QA & Testing Phase",due:"Mar 28",progress:20,hours:12,budget:2000},
-  {id:3,client:"Melon Co.",   title:"Rebrand Design",    due:"Mar 10",progress:90,hours:28,budget:3500},
-  {id:4,client:"Orbit Labs",  title:"Auth Module",       due:"Apr 2", progress:45,hours:18,budget:2800},
-];
+const MILESTONES = [];
 
-const WQI_HISTORY = [
-  {week:"Jan W1",wqi:74},{week:"Jan W2",wqi:78},{week:"Jan W3",wqi:80},{week:"Jan W4",wqi:77},
-  {week:"Feb W1",wqi:82},{week:"Feb W2",wqi:85},{week:"Feb W3",wqi:83},{week:"Feb W4",wqi:87},
-];
+const WQI_HISTORY = [];
 
-const WEEKLY = [
-  {day:"M",hours:7.2,wqi:88},{day:"T",hours:6.1,wqi:82},{day:"W",hours:8.5,wqi:91},
-  {day:"T",hours:5.8,wqi:74},{day:"F",hours:7.9,wqi:86},{day:"S",hours:2.1,wqi:70},{day:"S",hours:3.6,wqi:78},
-];
+const WEEKLY = [];
 
-const STREAK_DAYS = [
-  {d:"M",active:true},{d:"T",active:true},{d:"W",active:true},{d:"T",active:true},
-  {d:"F",active:true},{d:"S",active:false},{d:"S",active:true},
-  {d:"M",active:true},{d:"T",active:true},{d:"W",active:true},{d:"T",active:true},
-  {d:"F",active:true},{d:"S",active:false},{d:"S",active:false},
-];
+const STREAK_DAYS = [];
 
 const BADGES = [
   {id:"deep_focus",   IconComp:Icon.target,   label:"Deep Focus",    desc:"4+ hour uninterrupted session",     earned:false},
@@ -227,12 +166,7 @@ const BADGES = [
   {id:"marathon",     IconComp:Icon.run,       label:"Marathon",     desc:"40+ hours tracked in a single week",earned:false},
 ];
 
-const ADMIN_USERS = [
-  {id:1,name:"Alex Rivera",  email:"alex@designco.io",  plan:"Pro",    sessions:47,revenue:8240,status:"active"},
-  {id:2,name:"Jordan Kim",   email:"jordan@devcraft.io",plan:"Agency", sessions:128,revenue:22400,status:"active"},
-  {id:3,name:"Sam Okafor",   email:"sam@freelance.ng",  plan:"Free",   sessions:12,revenue:0,status:"active"},
-  {id:4,name:"Priya Nair",   email:"priya@studio.in",   plan:"Pro",    sessions:34,revenue:5100,status:"suspended"},
-];
+const ADMIN_USERS = [];
 
 const TAG_OPTS     = ["Design","React","Backend","Node","Meeting","Research","Writing","DevOps"];
 
@@ -525,20 +459,26 @@ function StreakTracker({streak}){
    BADGE SYSTEM
 ═══════════════════════════════════════════════════════════════════════════ */
 function BadgeGrid({badges}){
+  const [hoveredId, setHoveredId] = useState(null);
   return(
     <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
       {badges.map(b=>{
         const IconC = b.IconComp || (()=>null);
+        const isHovered = hoveredId === b.id;
         return (
-        <div key={b.id} style={{
+        <div key={b.id} 
+          onMouseEnter={()=>setHoveredId(b.id)}
+          onMouseLeave={()=>setHoveredId(null)}
+          style={{
           padding:"14px 12px",borderRadius:10,textAlign:"center",
-          background:b.earned?C.accentLight:C.bg,
-          border:`1px solid ${b.earned?C.accentBorder:C.borderLight}`,
+          background:isHovered ? (b.earned ? C.accent : C.accentLight) : (b.earned?C.accentLight:C.bg),
+          border:`1px solid ${isHovered ? C.accentBorder : (b.earned?C.accentBorder:C.borderLight)}`,
           opacity:b.earned?1:.7,
           transition:"all .2s",
+          cursor:"pointer",
         }}>
-          <div style={{display:"flex",justifyContent:"center",marginBottom:6,color:b.earned?C.accent:C.muted}}><IconC size={22}/></div>
-          <div style={{fontSize:12,fontWeight:600,color:b.earned?C.text:C.muted,marginBottom:2}}>{b.label}</div>
+          <div style={{display:"flex",justifyContent:"center",marginBottom:6,color:isHovered ? C.accent : (b.earned?C.accent:C.muted)}}><IconC size={22}/></div>
+          <div style={{fontSize:12,fontWeight:600,color:isHovered ? C.text : (b.earned?C.text:C.muted),marginBottom:2}}>{b.label}</div>
           <div style={{fontSize:10,color:C.muted,lineHeight:1.4}}>{b.desc}</div>
           {b.earned&&<div style={{fontSize:10,color:C.accent,fontWeight:600,marginTop:6,display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>{Icon.check(12)} Earned</div>}
         </div>
@@ -951,11 +891,19 @@ function ProfileDrawer({onClose,onToast,currentUser,onLogout,role,onUpdateProfil
   const [avatarUrl,setAvatarUrl] = useState(currentUser?.avatar_url||"");
   const [avatarPreview,setAvatarPreview] = useState(currentUser?.avatar_url||"");
   const [studioName,setStudioName] = useState(currentUser?.studio_name ?? "");
+  const [githubUrl,setGithubUrl] = useState(currentUser?.github_url || "");
+  const [linkedinUrl,setLinkedinUrl] = useState(currentUser?.linkedin_url || "");
+  const [twitterUrl,setTwitterUrl] = useState(currentUser?.twitter_url || "");
   const [saving,setSaving]       = useState(false);
   const fileRef = useRef(null);
   const isClient = role==="client";
 
-  useEffect(()=>{ setStudioName(currentUser?.studio_name ?? ""); },[currentUser?.studio_name]);
+  useEffect(()=>{ 
+    setStudioName(currentUser?.studio_name ?? "");
+    setGithubUrl(currentUser?.github_url || "");
+    setLinkedinUrl(currentUser?.linkedin_url || "");
+    setTwitterUrl(currentUser?.twitter_url || "");
+  },[currentUser]);
 
   /* Local file → base64 preview */
   const handleFileChange = (e) => {
@@ -977,6 +925,9 @@ function ProfileDrawer({onClose,onToast,currentUser,onLogout,role,onUpdateProfil
         const payload = { name: name || currentUser?.name, hourly_rate: rate };
         if(avatarUrl !== (currentUser?.avatar_url||"")) payload.avatar_url = avatarUrl || null;
         if(isClient && studioName !== undefined) payload.studio_name = studioName || null;
+        if(githubUrl !== (currentUser?.github_url||"")) payload.github_url = githubUrl || null;
+        if(linkedinUrl !== (currentUser?.linkedin_url||"")) payload.linkedin_url = linkedinUrl || null;
+        if(twitterUrl !== (currentUser?.twitter_url||"")) payload.twitter_url = twitterUrl || null;
         await onUpdateProfile(payload);
       }
       onToast("Profile updated");
@@ -1003,13 +954,22 @@ function ProfileDrawer({onClose,onToast,currentUser,onLogout,role,onUpdateProfil
               <div style={{
                 width:88,height:88,borderRadius:"50%",overflow:"hidden",
                 background: avatarPreview ? "transparent" : `linear-gradient(135deg,${C.accent},#0D5535)`,
-                backgroundImage: avatarPreview ? `url(${avatarPreview})` : undefined,
-                backgroundSize:"cover", backgroundPosition:"center",
                 display:"flex",alignItems:"center",justifyContent:"center",
                 color:"#fff",fontSize:28,fontWeight:700,
                 border:`3px solid ${C.border}`,cursor:"pointer",
+                position:"relative",
               }} onClick={()=>fileRef.current?.click()}>
-                {!avatarPreview && ((name||displayName).charAt(0)||"?").toUpperCase()}
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Avatar" style={{width:"100%",height:"100%",objectFit:"cover",position:"absolute",inset:0}}/>
+                ) : (
+                  ((name||displayName).charAt(0)||"?").toUpperCase()
+                )}
+              </div>
+              <div style={{fontSize:11,color:C.muted,fontWeight:500,marginTop:8,textAlign:"center"}}>
+                {isClient ? "Client" : "Freelancer"}
+              </div>
+              <div style={{fontSize:14,fontWeight:600,color:C.text,marginTop:4,textAlign:"center"}}>
+                {name||displayName||"User"}
               </div>
               {/* Camera overlay */}
               <div onClick={()=>fileRef.current?.click()} style={{
@@ -1053,6 +1013,20 @@ function ProfileDrawer({onClose,onToast,currentUser,onLogout,role,onUpdateProfil
               <input style={inp} type="number" value={rate} onChange={e=>setRate(+e.target.value)} min={0}/>
             </Field>
           )}
+
+          {/* Social links */}
+          <div style={{marginTop:20,paddingTop:20,borderTop:`1px solid ${C.borderLight}`}}>
+            <div style={LBL}>Social links</div>
+            <Field label="GitHub">
+              <input style={inp} type="url" value={githubUrl} onChange={e=>setGithubUrl(e.target.value)} placeholder="https://github.com/username"/>
+            </Field>
+            <Field label="LinkedIn">
+              <input style={inp} type="url" value={linkedinUrl} onChange={e=>setLinkedinUrl(e.target.value)} placeholder="https://linkedin.com/in/username"/>
+            </Field>
+            <Field label="Twitter">
+              <input style={inp} type="url" value={twitterUrl} onChange={e=>setTwitterUrl(e.target.value)} placeholder="https://twitter.com/username"/>
+            </Field>
+          </div>
 
           {/* Extension sync token */}
           {!isClient && (
@@ -2154,9 +2128,42 @@ export default function WorkRate({
   };
 
   /* ── Stop session ── */
-  const stopSession = () => {
+  const stopSession = async () => {
+    if (!running || elapsed === 0) return;
     setRunning(false);
     const wqi = Math.min(97, 84 + Math.floor(elapsed / 90));
+    const now = new Date();
+    const startTime = new Date(now.getTime() - elapsed * 1000);
+    
+    // Build session object for saving
+    const sessionData = {
+      id: Date.now(),
+      task: task || "Untitled session",
+      client: sessionConfig?.client || "",
+      tags: sessionConfig?.tags || [],
+      start: startTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }),
+      end: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }),
+      date: "Today",
+      duration: elapsed,
+      verifiedSec: elapsed,
+      idle: 0,
+      switches: 0,
+      wqi: wqi,
+      approved: false,
+      shared: false,
+      sessionStart: startTime.toISOString(),
+      sessionEnd: now.toISOString(),
+      verifiedPct: 100,
+      offTabPct: 0,
+      idlePct: 0,
+      registeredTabs: sessionConfig?.registeredTabs || [],
+      offTabEvents: [],
+      activityBlocks: [],
+    };
+    
+    // Save to database
+    await addSession(sessionData);
+    
     const summary = generateAISummary(
       task || "Untitled session", elapsed, wqi,
       rand(2,8), rand(4,18),
@@ -2166,6 +2173,7 @@ export default function WorkRate({
     setModal("aiSummary");
     broadcastToExtension("SESSION_STOP", { elapsed, wqi });
     setElapsed(0);
+    setTask("");
     setSessionConfig(null);
   };
 
@@ -2334,8 +2342,12 @@ export default function WorkRate({
             <button onClick={onRefresh} title="Refresh data" style={{padding:"6px 10px",borderRadius:8,border:`1px solid ${C.border}`,background:"transparent",color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>↻ Refresh</button>
           )}
           <div onClick={()=>setModal("profile")}
-            style={{width:30,height:30,borderRadius:"50%",background:currentUser?.avatar_url ? `url(${currentUser.avatar_url}) center/cover` : `linear-gradient(135deg,${C.accent},#0D5535)`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>
-            {!currentUser?.avatar_url && (currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : (currentUser?.email?.charAt(0) || "?").toUpperCase())}
+            style={{width:30,height:30,borderRadius:"50%",overflow:"hidden",position:"relative",background:currentUser?.avatar_url ? "transparent" : `linear-gradient(135deg,${C.accent},#0D5535)`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+            {currentUser?.avatar_url ? (
+              <img src={currentUser.avatar_url} alt="Avatar" style={{width:"100%",height:"100%",objectFit:"cover",position:"absolute",inset:0}}/>
+            ) : (
+              (currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : (currentUser?.email?.charAt(0) || "?").toUpperCase())
+            )}
           </div>
         </div>
       </header>
@@ -2508,7 +2520,36 @@ export default function WorkRate({
               </div>
             ) : (
             <>
-            <div style={card}><Heatmap data={HEATMAP}/></div>
+            <div style={card}>
+              <Heatmap data={(() => {
+                // Build heatmap from real session activityBlocks
+                const blocks = [];
+                const blockMap = new Map();
+                sessions.forEach(s => {
+                  if (Array.isArray(s.activityBlocks)) {
+                    s.activityBlocks.forEach(b => {
+                      const key = `${b.hour}-${b.block}`;
+                      if (!blockMap.has(key)) {
+                        blockMap.set(key, { hour: b.hour, block: b.block, intensity: 0, idle: false });
+                      }
+                      const existing = blockMap.get(key);
+                      existing.intensity = Math.min(100, existing.intensity + (b.intensity || 0));
+                      if (b.idle) existing.idle = true;
+                    });
+                  }
+                });
+                // Fill empty blocks
+                for (let h = 0; h < 24; h++) {
+                  for (let m = 0; m < 12; m++) {
+                    const key = `${h}-${m}`;
+                    if (!blockMap.has(key)) {
+                      blockMap.set(key, { hour: h, block: m, intensity: 0, idle: false });
+                    }
+                  }
+                }
+                return Array.from(blockMap.values()).sort((a, b) => a.hour === b.hour ? a.block - b.block : a.hour - b.hour);
+              })()}/>
+            </div>
 
             {/* Context switch graph */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>

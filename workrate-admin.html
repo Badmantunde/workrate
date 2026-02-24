@@ -75,7 +75,7 @@
         <p class="sub">Sign in with an admin account.</p>
         <form id="loginForm">
           <label for="email">Email</label>
-          <input type="email" id="email" name="email" required autocomplete="email" placeholder="admin@example.com"/>
+          <input type="email" id="email" name="email" required autocomplete="email" value="Admin@workrate.com" placeholder="Admin@workrate.com"/>
           <label for="password">Password</label>
           <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••"/>
           <div class="err" id="loginErr"></div>
@@ -95,26 +95,67 @@
     <div id="adminScreen" class="hidden">
       <div class="header">
         <div>
-          <h1>Admin</h1>
-          <p class="sub">Platform stats and user management.</p>
+          <h1>Admin Dashboard</h1>
+          <p class="sub">Platform stats, user management, and analytics.</p>
         </div>
-        <button type="button" class="btn btn-ghost" id="adminLogout">Sign out</button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn btn-ghost btn-sm" id="exportData">Export CSV</button>
+          <button type="button" class="btn btn-ghost" id="adminLogout">Sign out</button>
+        </div>
       </div>
 
       <div class="card">
         <h2>Platform stats</h2>
+        <div style="margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+          <div>
+            <label>Date range</label>
+            <input type="date" id="startDate" style="width: 140px; margin-right: 8px;"/>
+            <input type="date" id="endDate" style="width: 140px;"/>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="applyFilters">Apply filters</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="clearFilters">Clear</button>
+        </div>
         <div class="stats" id="statsGrid">
-          <div class="stat"><div class="stat-val" id="statUsers">—</div><div class="stat-lbl">Users</div></div>
-          <div class="stat"><div class="stat-val" id="statSessions">—</div><div class="stat-lbl">Sessions</div></div>
-          <div class="stat"><div class="stat-val" id="statVerified">—</div><div class="stat-lbl">Verified (hrs)</div></div>
+          <div class="stat"><div class="stat-val" id="statUsers">—</div><div class="stat-lbl">Total users</div></div>
+          <div class="stat"><div class="stat-val" id="statSessions">—</div><div class="stat-lbl">Total sessions</div></div>
+          <div class="stat"><div class="stat-val" id="statMinutes">—</div><div class="stat-lbl">Total minutes</div></div>
+          <div class="stat"><div class="stat-val" id="statHours">—</div><div class="stat-lbl">Total hours</div></div>
+          <div class="stat"><div class="stat-val" id="statRevenue">—</div><div class="stat-lbl">Revenue ($)</div></div>
           <div class="stat"><div class="stat-val" id="statFree">—</div><div class="stat-lbl">Free plan</div></div>
           <div class="stat"><div class="stat-val" id="statPro">—</div><div class="stat-lbl">Pro plan</div></div>
           <div class="stat"><div class="stat-val" id="statAgency">—</div><div class="stat-lbl">Agency plan</div></div>
+        </div>
+        <div style="margin-top: 16px; padding: 12px; background: var(--accent-light); border-radius: 8px; font-size: 12px; color: var(--sub);">
+          <strong>Documentation:</strong> Total minutes represents verified time tracked across all sessions. This is the billable time that users have logged. Revenue shows monthly recurring revenue (MRR) based on active subscriptions: Pro plan users ($19/month) and Agency plan users ($49/month). Use date filters to see revenue for specific time periods.
         </div>
       </div>
 
       <div class="card">
         <h2>Users</h2>
+        <div style="margin-bottom: 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+          <div style="flex: 1; min-width: 200px;">
+            <label>Search</label>
+            <input type="text" id="userSearch" placeholder="Search by email or name..." style="width: 100%; max-width: none;"/>
+          </div>
+          <div>
+            <label>Plan</label>
+            <select id="planFilter" style="width: 120px;">
+              <option value="">All plans</option>
+              <option value="free">Free</option>
+              <option value="pro">Pro</option>
+              <option value="agency">Agency</option>
+            </select>
+          </div>
+          <div>
+            <label>Status</label>
+            <select id="statusFilter" style="width: 120px;">
+              <option value="">All</option>
+              <option value="active">Active</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="filterUsers" style="margin-top: 20px;">Filter</button>
+        </div>
         <div class="pagination" style="margin-bottom: 12px;">
           <span id="usersRange">—</span>
           <button type="button" class="btn btn-ghost btn-sm" id="prevPage">Previous</button>
@@ -129,6 +170,7 @@
                 <th>Plan</th>
                 <th>Status</th>
                 <th>Sessions</th>
+                <th>Verified (min)</th>
                 <th>Verified (hrs)</th>
                 <th>Joined</th>
                 <th>Actions</th>
@@ -229,15 +271,51 @@
 
       document.getElementById('forbiddenLogout').addEventListener('click', () => { clearTokens(); showScreen('login'); });
       document.getElementById('adminLogout').addEventListener('click', () => { clearTokens(); showScreen('login'); });
+      
+      document.getElementById('exportData').addEventListener('click', async () => {
+        const res = await api('/admin/users?limit=10000&offset=0');
+        if (!res || !res.ok) return;
+        const d = await res.json();
+        const users = d.users ?? [];
+        const csv = [
+          ['Email', 'Name', 'Plan', 'Status', 'Sessions', 'Verified Minutes', 'Verified Hours', 'Joined'].join(','),
+          ...users.map(u => [
+            u.email || '',
+            u.name || '',
+            u.plan || 'free',
+            u.suspended ? 'Suspended' : 'Active',
+            u.session_count || 0,
+            Math.round((u.total_verified_sec || 0) / 60),
+            ((u.total_verified_sec || 0) / 3600).toFixed(2),
+            u.created_at ? new Date(u.created_at).toLocaleDateString() : ''
+          ].join(','))
+        ].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'workrate-users-' + new Date().toISOString().split('T')[0] + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      let currentStartDate = '';
+      let currentEndDate = '';
 
       async function loadStats() {
-        const res = await api('/admin/stats');
+        const params = new URLSearchParams();
+        if (currentStartDate) params.append('startDate', currentStartDate);
+        if (currentEndDate) params.append('endDate', currentEndDate);
+        const query = params.toString() ? '?' + params.toString() : '';
+        
+        const res = await api('/admin/stats' + query);
         if (!res || !res.ok) return;
         const d = await res.json();
         document.getElementById('statUsers').textContent = d.totalUsers ?? '—';
         document.getElementById('statSessions').textContent = d.totalSessions ?? '—';
-        const hrs = ((d.totalVerifiedSec || 0) / 3600).toFixed(1);
-        document.getElementById('statVerified').textContent = hrs;
+        document.getElementById('statMinutes').textContent = d.totalMinutes ? d.totalMinutes.toLocaleString() : '—';
+        document.getElementById('statHours').textContent = d.totalHours ? parseFloat(d.totalHours).toFixed(1) : '—';
+        document.getElementById('statRevenue').textContent = d.revenue?.total ? '$' + d.revenue.total.toFixed(2) : '$0';
         document.getElementById('statFree').textContent = d.plans?.free ?? '—';
         document.getElementById('statPro').textContent = d.plans?.pro ?? '—';
         document.getElementById('statAgency').textContent = d.plans?.agency ?? '—';
@@ -246,9 +324,19 @@
       let usersOffset = 0;
       const usersLimit = 50;
       let usersTotal = 0;
+      let currentPlanFilter = '';
+      let currentStatusFilter = '';
+      let currentSearchFilter = '';
 
       async function loadUsers() {
-        const res = await api('/admin/users?limit=' + usersLimit + '&offset=' + usersOffset);
+        const params = new URLSearchParams();
+        params.append('limit', usersLimit);
+        params.append('offset', usersOffset);
+        if (currentPlanFilter) params.append('plan', currentPlanFilter);
+        if (currentStatusFilter) params.append('status', currentStatusFilter);
+        if (currentSearchFilter) params.append('search', currentSearchFilter);
+        
+        const res = await api('/admin/users?' + params.toString());
         if (!res || !res.ok) return;
         const d = await res.json();
         usersTotal = d.total ?? 0;
@@ -260,7 +348,8 @@
         const tbody = document.getElementById('usersBody');
         tbody.innerHTML = users.map(u => {
           const created = u.created_at ? new Date(u.created_at).toLocaleDateString() : '—';
-          const hrs = (u.total_verified_sec / 3600).toFixed(1);
+          const mins = Math.round((u.total_verified_sec || 0) / 60);
+          const hrs = ((u.total_verified_sec || 0) / 3600).toFixed(1);
           const suspended = !!u.suspended;
           const isAdmin = !!u.is_admin;
           return '<tr data-id="' + u.id + '">' +
@@ -269,6 +358,7 @@
             '<td><span class="badge badge-plan">' + (u.plan || 'free') + '</span></td>' +
             '<td>' + (suspended ? '<span class="badge badge-suspended">Suspended</span>' : 'Active') + '</td>' +
             '<td>' + (u.session_count ?? 0) + '</td>' +
+            '<td>' + mins.toLocaleString() + '</td>' +
             '<td>' + hrs + '</td>' +
             '<td>' + created + '</td>' +
             '<td><div class="actions">' +
@@ -303,6 +393,34 @@
         loadUsers();
       }
 
+      document.getElementById('applyFilters').addEventListener('click', () => {
+        currentStartDate = document.getElementById('startDate').value;
+        currentEndDate = document.getElementById('endDate').value;
+        loadStats();
+      });
+      
+      document.getElementById('clearFilters').addEventListener('click', () => {
+        document.getElementById('startDate').value = '';
+        document.getElementById('endDate').value = '';
+        currentStartDate = '';
+        currentEndDate = '';
+        loadStats();
+      });
+      
+      document.getElementById('filterUsers').addEventListener('click', () => {
+        currentPlanFilter = document.getElementById('planFilter').value;
+        currentStatusFilter = document.getElementById('statusFilter').value;
+        currentSearchFilter = document.getElementById('userSearch').value.trim();
+        usersOffset = 0;
+        loadUsers();
+      });
+      
+      document.getElementById('userSearch').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          document.getElementById('filterUsers').click();
+        }
+      });
+      
       document.getElementById('prevPage').addEventListener('click', () => {
         if (usersOffset >= usersLimit) { usersOffset -= usersLimit; loadUsers(); }
       });

@@ -20,14 +20,29 @@ router.get('/', async (req, res) => {
   try {
     const { email } = req.query;
     if (email && typeof email === 'string' && email.includes('@')) {
-      const { rows } = await query(
+      // First check existing clients
+      const { rows: clientRows } = await query(
         `SELECT id, name, email, logo_url, rate
          FROM clients
          WHERE user_id = $1 AND LOWER(TRIM(email)) = LOWER(TRIM($2))
          LIMIT 5`,
         [req.user.id, email]
       );
-      return res.json({ clients: rows, lookup: true });
+      
+      // Also search users table for bidirectional lookup (email can be freelancer or client)
+      const { rows: userRows } = await query(
+        `SELECT id, name, email, avatar_url as logo_url, hourly_rate as rate
+         FROM users
+         WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))
+         LIMIT 5`,
+        [email]
+      );
+      
+      // Combine and deduplicate by email
+      const allResults = [...clientRows, ...userRows];
+      const unique = Array.from(new Map(allResults.map(r => [r.email?.toLowerCase(), r])).values());
+      
+      return res.json({ clients: unique.slice(0, 5), lookup: true });
     }
     const { rows } = await query(
       `SELECT
