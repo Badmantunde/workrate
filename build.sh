@@ -15,9 +15,10 @@ npm install
 echo "→ Building dashboard..."
 npm run build
 
-echo "→ Copying landing page into dist..."
+echo "→ Copying landing and admin pages into dist..."
 cd ..
 cp workrate-landing.html workrate-dashboard/dist/landing.html
+cp workrate-admin.html workrate-dashboard/dist/admin.html
 
 echo "✓ Build complete. dist/ contains:"
 ls workrate-dashboard/dist/

@@ -18,6 +18,7 @@ const KEY = {
 };
 
 export function getStoredUser()   { try { return JSON.parse(localStorage.getItem(KEY.user)); } catch { return null; } }
+export function setStoredUser(user) { try { localStorage.setItem(KEY.user, JSON.stringify(user)); } catch (_) {} }
 export function getAccessToken()  { return localStorage.getItem(KEY.access); }
 function getRefreshToken()        { return localStorage.getItem(KEY.refresh); }
 
@@ -141,8 +142,16 @@ export async function createSession(fields) {
 }
 
 /* ── Clients ───────────────────────────────────────────────────────────── */
-export async function getClients() {
-  return req('/clients');
+export async function getClients(params = {}) {
+  const qs = new URLSearchParams(params).toString();
+  return req(`/clients${qs ? `?${qs}` : ''}`);
+}
+
+/** Lookup clients by email (returns id, name, email, logo_url for dropdown) */
+export async function lookupClientsByEmail(email) {
+  if (!email || !String(email).includes('@')) return { clients: [] };
+  const data = await getClients({ email: String(email).trim() });
+  return data;
 }
 
 export async function createClient(fields) {

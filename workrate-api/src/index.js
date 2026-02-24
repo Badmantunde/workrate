@@ -13,6 +13,7 @@ import { rateLimit }     from 'express-rate-limit';
 import authRoutes        from './routes/auth.js';
 import sessionsRoutes    from './routes/sessions.js';
 import clientsRoutes     from './routes/clients.js';
+import adminRoutes       from './routes/admin.js';
 
 const app  = express();
 const PORT = process.env.PORT ?? 3001;
@@ -76,6 +77,7 @@ const authLimiter = rateLimit({
 app.use('/api/auth',     authLimiter, authRoutes);
 app.use('/api/sessions', sessionsRoutes);
 app.use('/api/clients',  clientsRoutes);
+app.use('/api/admin',    adminRoutes);
 
 /* ══════════════════════════════════════════════════════════════════════════
    HEALTH CHECK

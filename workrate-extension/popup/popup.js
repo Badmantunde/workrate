@@ -16,7 +16,7 @@
 // In development, point this to localhost or your preview URL.
 // Replace with your Netlify URL once deployed.
 // e.g. "https://workrate.netlify.app/dashboard" or your custom domain.
-const DASHBOARD_URL = "https://workrate.netlify.app/dashboard";
+const DASHBOARD_URL = 'https://my-workrate.netlify.app/dashboard';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    STATE — mirrors worker's sanitizeState output

@@ -35,6 +35,26 @@ const heatFill = (v,idle) => {
 
 const card  = {background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:"24px 26px"};
 const LBL   = {fontSize:11,letterSpacing:"0.07em",textTransform:"uppercase",color:C.muted,fontWeight:500,marginBottom:10};
+
+/* SVG icons (no emojis) */
+const Icon = {
+  check: (size=14) => <svg width={size} height={size} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M2 7l3 4 6-8"/></svg>,
+  cross: (size=14) => <svg width={size} height={size} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>,
+  warn: (size=14) => <svg width={size} height={size} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M7 4v4M7 9.5v.5"/><path d="M1.5 12L7 2l5.5 10H1.5z"/></svg>,
+  flame: (size=20) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>,
+  target: (size=18) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+  chart: (size=18) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>,
+  star: (size=18) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>,
+  handshake: (size=18) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 12h2m-2 2h2m-6-4h2m-2 2h2m4-6v2m0 8v2m-4-6h4m-4 2h6l2-4-2-4h-6m-4 2H8L6 8l2-4h4"/></svg>,
+  lightning: (size=18) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h8l-2 8 10-12h-8l2-8z"/></svg>,
+  run: (size=18) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 5l6 6-6 6M5 5v14"/></svg>,
+  doc: (size=18) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>,
+  chartBar: (size=18) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-5M12 16V9M17 16v-3"/></svg>,
+  clipboard: (size=18) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>,
+  circleOn: (size=18) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>,
+  circleOff: (size=18) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/></svg>,
+  settings: (size=18) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>,
+};
 const btn = (v="primary",extra={}) => ({
   padding:"9px 20px",borderRadius:9,border:"none",cursor:"pointer",fontFamily:"inherit",
   fontSize:13,fontWeight:600,letterSpacing:"-0.01em",transition:"all .15s",
@@ -199,12 +219,12 @@ const STREAK_DAYS = [
 ];
 
 const BADGES = [
-  {id:"deep_focus",   icon:"🎯",label:"Deep Focus",    desc:"4+ hour uninterrupted session",     earned:true },
-  {id:"consistent",  icon:"📈",label:"Consistent",     desc:"7-day streak achieved",             earned:true },
-  {id:"top_wqi",     icon:"⭐",label:"Top Performer",  desc:"WQI above 90 for a full week",      earned:true },
-  {id:"trusted",     icon:"🤝",label:"Trusted Pro",    desc:"97%+ client approval rate",         earned:true },
-  {id:"speedster",   icon:"⚡",label:"Fast Starter",   desc:"Start before 9am 5 days in a row",  earned:false},
-  {id:"marathon",    icon:"🏃",label:"Marathon",       desc:"40+ hours tracked in a single week", earned:false},
+  {id:"deep_focus",   IconComp:Icon.target,   label:"Deep Focus",    desc:"4+ hour uninterrupted session",     earned:false},
+  {id:"consistent",   IconComp:Icon.chart,     label:"Consistent",   desc:"7-day streak achieved",             earned:false},
+  {id:"top_wqi",      IconComp:Icon.star,      label:"Top Performer",desc:"WQI above 90 for a full week",      earned:false},
+  {id:"trusted",      IconComp:Icon.handshake, label:"Trusted Pro",  desc:"97%+ client approval rate",         earned:false},
+  {id:"speedster",    IconComp:Icon.lightning, label:"Fast Starter", desc:"Start before 9am 5 days in a row",  earned:false},
+  {id:"marathon",     IconComp:Icon.run,       label:"Marathon",     desc:"40+ hours tracked in a single week",earned:false},
 ];
 
 const ADMIN_USERS = [
@@ -214,7 +234,6 @@ const ADMIN_USERS = [
   {id:4,name:"Priya Nair",   email:"priya@studio.in",   plan:"Pro",    sessions:34,revenue:5100,status:"suspended"},
 ];
 
-const CLIENTS_LIST = ["Volta Studio","Melon Co.","Orbit Labs","Self"];
 const TAG_OPTS     = ["Design","React","Backend","Node","Meeting","Research","Writing","DevOps"];
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -289,9 +308,11 @@ function Toast({message,type="success",onDone}){
   useEffect(()=>{const t=setTimeout(onDone,3000);return()=>clearTimeout(t);},[onDone]);
   const colors={success:[C.accentLight,C.accent,C.accentBorder],error:[C.dangerLight,C.danger,C.dangerBorder],warn:[C.warnLight,C.warn,C.warnBorder]};
   const [bg,co,bd]=colors[type]||colors.success;
+  const icon = type==="success" ? Icon.check(16) : type==="error" ? Icon.cross(16) : Icon.warn(16);
   return(
-    <div style={{position:"fixed",bottom:28,right:28,zIndex:2000,background:bg,color:co,border:`1px solid ${bd}`,borderRadius:10,padding:"12px 18px",fontSize:13,fontWeight:500,boxShadow:"0 8px 24px rgba(0,0,0,.10)",animation:"wr-slidein .25s ease",maxWidth:340}}>
-      {type==="success"?"✓ ":type==="error"?"✕ ":"⚠ "}{message}
+    <div style={{position:"fixed",bottom:28,right:28,zIndex:2000,background:bg,color:co,border:`1px solid ${bd}`,borderRadius:10,padding:"12px 18px",fontSize:13,fontWeight:500,boxShadow:"0 8px 24px rgba(0,0,0,.10)",animation:"wr-slidein .25s ease",maxWidth:340,display:"flex",alignItems:"center",gap:8}}>
+      <span style={{display:"flex",flexShrink:0}}>{icon}</span>
+      <span>{message}</span>
     </div>
   );
 }
@@ -475,7 +496,7 @@ function StreakTracker({streak}){
   return(
     <div>
       <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
-        <div style={{fontSize:32}}>🔥</div>
+        <div style={{color:C.warn,display:"flex"}}>{Icon.flame(32)}</div>
         <div>
           <div style={{fontSize:28,fontWeight:700,color:C.text,letterSpacing:"-0.04em",lineHeight:1}}>{streak}</div>
           <div style={{fontSize:12,color:C.sub,marginTop:2}}>day streak</div>
@@ -506,20 +527,23 @@ function StreakTracker({streak}){
 function BadgeGrid({badges}){
   return(
     <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-      {badges.map(b=>(
+      {badges.map(b=>{
+        const IconC = b.IconComp || (()=>null);
+        return (
         <div key={b.id} style={{
           padding:"14px 12px",borderRadius:10,textAlign:"center",
           background:b.earned?C.accentLight:C.bg,
           border:`1px solid ${b.earned?C.accentBorder:C.borderLight}`,
-          opacity:b.earned?1:.55,
+          opacity:b.earned?1:.7,
           transition:"all .2s",
         }}>
-          <div style={{fontSize:22,marginBottom:6,filter:b.earned?"none":"grayscale(1)"}}>{b.icon}</div>
+          <div style={{display:"flex",justifyContent:"center",marginBottom:6,color:b.earned?C.accent:C.muted}}><IconC size={22}/></div>
           <div style={{fontSize:12,fontWeight:600,color:b.earned?C.text:C.muted,marginBottom:2}}>{b.label}</div>
           <div style={{fontSize:10,color:C.muted,lineHeight:1.4}}>{b.desc}</div>
-          {b.earned&&<div style={{fontSize:10,color:C.accent,fontWeight:600,marginTop:6}}>Earned ✓</div>}
+          {b.earned&&<div style={{fontSize:10,color:C.accent,fontWeight:600,marginTop:6,display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>{Icon.check(12)} Earned</div>}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -533,7 +557,7 @@ function AISummaryModal({summary,task,onClose,onInvoice,onSave}){
     navigator.clipboard.writeText(summary.invoiceLine).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);});
   };
   return(
-    <Modal title="✨ AI Session Summary" onClose={onClose} width={540}>
+    <Modal title="AI Session Summary" onClose={onClose} width={540}>
       {/* Header metrics */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
         {[
@@ -551,7 +575,7 @@ function AISummaryModal({summary,task,onClose,onInvoice,onSave}){
 
       {/* Peak window */}
       <div style={{background:C.accentLight,border:`1px solid ${C.accentBorder}`,borderRadius:10,padding:"12px 16px",marginBottom:16,display:"flex",gap:10,alignItems:"center"}}>
-        <span style={{fontSize:18}}>⚡</span>
+        <span style={{color:C.accent,display:"flex"}}>{Icon.lightning(20)}</span>
         <div>
           <div style={{fontSize:12,fontWeight:600,color:C.accent}}>Peak productivity window</div>
           <div style={{fontSize:13,color:C.text,marginTop:1}}>{summary.peak}</div>
@@ -599,8 +623,9 @@ function AdjustTimeModal({session,onClose,onSave,onToast}){
   };
   return(
     <Modal title="Adjust tracked time" onClose={onClose} width={420}>
-      <div style={{background:C.warnLight,border:`1px solid ${C.warnBorder}`,borderRadius:10,padding:"10px 14px",marginBottom:20,fontSize:12,color:C.warn,fontWeight:500}}>
-        ⚠ All adjustments are logged for transparency. A reason is required.
+      <div style={{background:C.warnLight,border:`1px solid ${C.warnBorder}`,borderRadius:10,padding:"10px 14px",marginBottom:20,fontSize:12,color:C.warn,fontWeight:500,display:"flex",alignItems:"center",gap:8}}>
+        <span style={{flexShrink:0}}>{Icon.warn(16)}</span>
+        All adjustments are logged for transparency. A reason is required.
       </div>
       <Field label="Session">
         <div style={{...inp,background:C.bg,color:C.sub,pointerEvents:"none"}}>{session.task}</div>
@@ -622,22 +647,73 @@ function AdjustTimeModal({session,onClose,onSave,onToast}){
 /* ═══════════════════════════════════════════════════════════════════════════
    NEW SESSION MODAL
 ═══════════════════════════════════════════════════════════════════════════ */
-function NewSessionModal({onClose,onSave,clients}){
-  const clientOpts = Array.isArray(clients) && clients.length ? clients : CLIENTS_LIST;
-  const [form,setForm]=useState({task:"",client:clientOpts[0]||"",tags:[],start:nowStr(),end:"",notes:""});
+function NewSessionModal({onClose,onSave,clients,onLookupClients}){
+  const clientList = Array.isArray(clients) ? clients : [];
+  const clientOpts = clientList.map(c => typeof c === "string" ? c : (c?.name || "—")).filter(Boolean);
+  const clientObjects = clientList.filter(c => c && typeof c === "object" && (c.id != null || c.name));
+  const [form,setForm]=useState({task:"",client:clientOpts[0]||"",clientId:null,tags:[],start:nowStr(),end:"",notes:""});
+  const [clientInput,setClientInput]=useState("");
+  const [lookupResults,setLookupResults]=useState([]);
+  const [lookupLoading,setLookupLoading]=useState(false);
+  const [dropdownOpen,setDropdownOpen]=useState(false);
+  const lookupTimerRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (!clientInput.trim() || !clientInput.includes("@")) {
+      setLookupResults([]);
+      return;
+    }
+    if (lookupTimerRef.current) clearTimeout(lookupTimerRef.current);
+    lookupTimerRef.current = setTimeout(async () => {
+      if (!onLookupClients) { setLookupResults([]); return; }
+      setLookupLoading(true);
+      try {
+        const list = await onLookupClients(clientInput.trim());
+        setLookupResults(Array.isArray(list) ? list : []);
+      } catch (_) {
+        setLookupResults([]);
+      } finally {
+        setLookupLoading(false);
+      }
+    }, 300);
+    return () => { if (lookupTimerRef.current) clearTimeout(lookupTimerRef.current); };
+  }, [clientInput, onLookupClients]);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setDropdownOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const displayClient = form.client || "";
+  const showLookup = clientInput.includes("@") && (lookupResults.length > 0 || lookupLoading);
+  const optionsToShow = showLookup ? lookupResults : clientObjects;
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
   const addTag=(t)=>{if(t&&!form.tags.includes(t))set("tags",[...form.tags,t]);};
+  const selectClient=(c)=>{
+    const name = c?.name || (typeof c === "string" ? c : "—");
+    set("client", name);
+    set("clientId", c?.id ?? null);
+    setClientInput(name);
+    setDropdownOpen(false);
+    setLookupResults([]);
+  };
+
   const submit=()=>{
     if(!form.task.trim())return;
     const [sh,sm]=form.start.split(":").map(Number);
     const [eh,em]=(form.end||"00:00").split(":").map(Number);
     const dur=form.end?Math.max(0,((eh*60+em)-(sh*60+sm))*60):3600;
     const wqi=rand(68,96);
-    onSave({id:Date.now(),date:"Today",task:form.task,client:form.client||"—",
+    onSave({id:Date.now(),date:"Today",task:form.task,client:form.client||"—",clientId:form.clientId,
       start:form.start,end:form.end||"—",duration:dur,
       wqi,switches:rand(1,8),idle:rand(3,18),tags:form.tags,approved:false,shared:false});
     onClose();
   };
+
   return(
     <Modal title="New session" onClose={onClose} width={500}>
       <Field label="Task name"><input style={inp} placeholder="What did you work on?" value={form.task} onChange={e=>set("task",e.target.value)}/></Field>
@@ -646,9 +722,39 @@ function NewSessionModal({onClose,onSave,clients}){
         <Field label="End"><input style={inp} type="time" value={form.end} onChange={e=>set("end",e.target.value)}/></Field>
       </div>
       <Field label="Client">
-        <select style={inp} value={form.client} onChange={e=>set("client",e.target.value)}>
-          {clientOpts.map(c=><option key={c}>{c}</option>)}
-        </select>
+        <div ref={dropdownRef} style={{position:"relative"}}>
+          <input
+            style={inp}
+            value={dropdownOpen ? clientInput : displayClient}
+            onChange={e=>{ setClientInput(e.target.value); setDropdownOpen(true); if (!e.target.value.includes("@")) set("client", e.target.value); }}
+            onFocus={()=>setDropdownOpen(true)}
+            placeholder="Type name or client email to search"
+          />
+          {dropdownOpen && (
+            <div style={{position:"absolute",top:"100%",left:0,right:0,marginTop:4,background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,.1)",maxHeight:220,overflowY:"auto",zIndex:50}}>
+              {lookupLoading && <div style={{padding:"12px 14px",fontSize:12,color:C.muted}}>Searching...</div>}
+              {!lookupLoading && optionsToShow.length === 0 && clientInput.includes("@") && <div style={{padding:"12px 14px",fontSize:12,color:C.muted}}>No clients found for this email.</div>}
+              {!lookupLoading && optionsToShow.length === 0 && !clientInput.includes("@") && clientObjects.length === 0 && <div style={{padding:"12px 14px",fontSize:12,color:C.muted}}>Type a client email to look up, or enter a name.</div>}
+              {optionsToShow.map(c=>{
+                const obj = typeof c === "object" ? c : { name: c };
+                const name = obj.name || obj.email || String(c);
+                const logo = obj.logo_url;
+                return (
+                  <button key={obj.id ?? name} type="button" onClick={()=>selectClient(obj)} style={{width:"100%",display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:"none",background:"none",cursor:"pointer",fontSize:13,color:C.text,textAlign:"left",fontFamily:"inherit",borderRadius:0}}
+                    onMouseDown={e=>e.preventDefault()}>
+                    <div style={{width:32,height:32,borderRadius:"50%",background:logo ? `url(${logo}) center/cover` : `linear-gradient(135deg,${C.accent},#0D5535)`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:12,fontWeight:600,flexShrink:0}}>
+                      {!logo && (name.charAt(0)||"?").toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{fontWeight:600}}>{name}</div>
+                      {obj.email && <div style={{fontSize:11,color:C.muted}}>{obj.email}</div>}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </Field>
       <Field label="Tags">
         <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:8}}>
@@ -670,15 +776,80 @@ function NewSessionModal({onClose,onSave,clients}){
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   INVOICE MODAL
+   INVOICE MODAL — well-structured invoice, downloadable (print / save as PDF)
 ═══════════════════════════════════════════════════════════════════════════ */
-function InvoiceModal({session,onClose,onToast}){
-  const [rate,setRate]=useState(95);
+function InvoiceModal({session,onClose,onToast,currentUser}){
+  const [rate,setRate]=useState(currentUser?.hourly_rate || 95);
   const [terms,setTerms]=useState("Net 14");
   const [note,setNote]=useState("");
-  const hrs=fmtHr(session.duration);
-  const total=(parseFloat(hrs)*rate).toFixed(2);
-  const generate=()=>{onToast(`Invoice for "${session.task}" — $${total} generated`);onClose();};
+  const dur = session.verifiedSec ?? session.duration ?? 0;
+  const hrs = fmtHr(dur);
+  const hrsNum = parseFloat(hrs) || 0;
+  const total = (hrsNum * rate).toFixed(2);
+  const invoiceDate = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+  const downloadInvoice = () => {
+    const sellerName = currentUser?.name || "Freelancer";
+    const sellerEmail = currentUser?.email || "";
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"/><title>Invoice – ${session.task}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; max-width: 700px; margin: 32px auto; padding: 0 24px; color: #18170F; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 2px solid #1B7A50; }
+  .logo { font-size: 20px; font-weight: 700; color: #1B7A50; }
+  .meta { font-size: 12px; color: #6A6760; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 8px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 24px 0; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid #E3E0D9; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #6A6760; font-weight: 600; }
+  .amount { text-align: right; font-weight: 600; }
+  .total-row td { border-bottom: none; padding-top: 16px; font-size: 18px; font-weight: 700; }
+  .terms { margin-top: 32px; font-size: 12px; color: #6A6760; }
+  .note { margin-top: 16px; padding: 12px; background: #F7F6F3; border-radius: 8px; font-size: 13px; }
+  @media print { body { margin: 0; } }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="logo">WorkRate</div>
+      <div class="meta">Invoice · ${invoiceDate}</div>
+    </div>
+    <div style="text-align: right;">
+      <div style="font-weight: 600;">${sellerName}</div>
+      <div class="meta">${sellerEmail}</div>
+    </div>
+  </div>
+  <h1>Invoice</h1>
+  <p class="meta">To: ${session.client}</p>
+  <table>
+    <thead><tr><th>Description</th><th>Date</th><th>Hours</th><th class="amount">Rate</th><th class="amount">Amount</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>${session.task}</td>
+        <td>${session.date} · ${session.start}–${session.end}</td>
+        <td>${hrs}</td>
+        <td class="amount">$${rate}/hr</td>
+        <td class="amount">$${total}</td>
+      </tr>
+      <tr class="total-row"><td colspan="4" style="text-align: right;">Total</td><td class="amount">$${total}</td></tr>
+    </tbody>
+  </table>
+  <div class="terms">Payment terms: ${terms}. All amounts in USD.</div>
+  ${note ? `<div class="note">${note.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>` : ""}
+</body>
+</html>`;
+    const win = window.open("", "_blank");
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); }, 250);
+    onToast("Invoice opened for print or save as PDF");
+    onClose();
+  };
+
   return(
     <Modal title="Generate invoice" onClose={onClose} width={440}>
       <div style={{background:C.bg,borderRadius:10,padding:"14px 16px",marginBottom:20,border:`1px solid ${C.borderLight}`}}>
@@ -700,9 +871,9 @@ function InvoiceModal({session,onClose,onToast}){
         <div style={{fontSize:13,color:C.sub}}>{hrs}h × ${rate}/hr</div>
         <div style={{fontSize:22,fontWeight:700,color:C.text,letterSpacing:"-0.03em"}}>${total}</div>
       </div>
-      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end",flexWrap:"wrap"}}>
         <button style={btn("ghost")} onClick={onClose}>Cancel</button>
-        <button style={btn("primary")} onClick={generate}>Generate invoice</button>
+        <button style={btn("primary")} onClick={downloadInvoice}>Download invoice</button>
       </div>
     </Modal>
   );
@@ -718,13 +889,16 @@ function ExportModal({session,onClose,onToast}){
         <div style={{fontSize:13,fontWeight:600,color:C.text}}>{session.task}</div>
         <div style={{fontSize:12,color:C.sub,marginTop:2}}>{session.client} · {fmtHr(session.duration)}h tracked</div>
       </div>
-      {[["📄 PDF Report","Full session summary with heatmap snapshot"],
-        ["📊 CSV Export","Raw time blocks for your records"],
-        ["📋 Client-ready summary","Clean one-pager, no raw data exposed"]].map(([t,d])=>(
-        <button key={t} onClick={()=>{onToast(`${t.slice(3)} downloading…`);onClose();}}
-          style={{...btn("ghost",{width:"100%",textAlign:"left",display:"flex",flexDirection:"column",gap:3,padding:"12px 14px",borderRadius:10,marginBottom:8})}}> 
-          <span style={{fontWeight:600,color:C.text}}>{t}</span>
-          <span style={{fontSize:11,color:C.muted,fontWeight:400}}>{d}</span>
+      {[[Icon.doc,"PDF Report","Full session summary with heatmap snapshot"],
+        [Icon.chartBar,"CSV Export","Raw time blocks for your records"],
+        [Icon.clipboard,"Client-ready summary","Clean one-pager, no raw data exposed"]].map(([Ico,t,d])=>(
+        <button key={t} onClick={()=>{onToast(`${t} downloading…`);onClose();}}
+          style={{...btn("ghost",{width:"100%",textAlign:"left",display:"flex",flexDirection:"row",alignItems:"center",gap:10,padding:"12px 14px",borderRadius:10,marginBottom:8})}}> 
+          <span style={{color:C.accent,display:"flex"}}>{typeof Ico==="function"?Ico(20):Ico}</span>
+          <div style={{display:"flex",flexDirection:"column",gap:2}}>
+            <span style={{fontWeight:600,color:C.text,fontSize:13}}>{t}</span>
+            <span style={{fontSize:11,color:C.muted,fontWeight:400}}>{d}</span>
+          </div>
         </button>
       ))}
       <div style={{display:"flex",justifyContent:"flex-end",marginTop:4}}>
@@ -742,7 +916,7 @@ function DeepWorkModal({active,onToggle,onClose}){
   return(
     <Modal title="Deep Work Mode" onClose={onClose} width={420}>
       <div style={{background:active?C.purpleLight:C.bg,border:`1px solid ${active?C.purpleBorder:C.border}`,borderRadius:10,padding:"16px",marginBottom:20,textAlign:"center"}}>
-        <div style={{fontSize:28,marginBottom:6}}>{active?"🟣":"⚪"}</div>
+        <div style={{marginBottom:6,display:"flex",justifyContent:"center",color:active?C.purple:C.muted}}>{active?Icon.circleOn(28):Icon.circleOff(28)}</div>
         <div style={{fontSize:14,fontWeight:600,color:active?C.purple:C.text}}>{active?"Active — Distraction blocking on":"Currently off"}</div>
         <div style={{fontSize:12,color:C.sub,marginTop:4}}>Blocks distracting domains during focus sessions</div>
       </div>
@@ -769,57 +943,84 @@ function DeepWorkModal({active,onToggle,onClose}){
 /* ═══════════════════════════════════════════════════════════════════════════
    PROFILE DRAWER
 ═══════════════════════════════════════════════════════════════════════════ */
-function ProfileDrawer({onClose,onToast,currentUser,onLogout}){
+function ProfileDrawer({onClose,onToast,currentUser,onLogout,role,onUpdateProfile}){
   const displayName = currentUser?.name || currentUser?.email?.split("@")[0] || "";
   const [name,setName]=useState(displayName||"");
   const [email,setEmail]=useState(currentUser?.email||"");
-  const [rate,setRate]=useState(95);
-  const save=()=>{onToast("Profile updated");onClose();};
+  const [rate,setRate]=useState(currentUser?.hourly_rate ?? 95);
+  const [avatarUrl,setAvatarUrl]=useState(currentUser?.avatar_url||"");
+  const [studioName,setStudioName]=useState(currentUser?.studio_name ?? "");
+  const isClient = role==="client";
+
+  useEffect(() => {
+    setStudioName(currentUser?.studio_name ?? "");
+  }, [currentUser?.studio_name]);
+
+  const doSave = async () => {
+    try {
+      if (onUpdateProfile) {
+        const payload = { name: name || currentUser?.name, hourly_rate: rate };
+        if (avatarUrl !== (currentUser?.avatar_url || "")) payload.avatar_url = avatarUrl || null;
+        if (isClient && studioName !== undefined) payload.studio_name = studioName || null;
+        await onUpdateProfile(payload);
+      }
+      onToast("Profile updated");
+      onClose();
+    } catch (e) {
+      onToast(e?.message || "Update failed", "error");
+    }
+  };
+
   return(
     <div style={{position:"fixed",inset:0,zIndex:1000,display:"flex",justifyContent:"flex-end"}}
       onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
       <div style={{position:"absolute",inset:0,background:"rgba(24,23,15,.2)"}} onClick={onClose}/>
-      <div style={{position:"relative",background:C.surface,width:360,height:"100%",boxShadow:"-24px 0 48px rgba(0,0,0,.1)",display:"flex",flexDirection:"column",overflowY:"auto"}}>
+      <div style={{position:"relative",background:C.surface,width:380,height:"100%",boxShadow:"-24px 0 48px rgba(0,0,0,.1)",display:"flex",flexDirection:"column",overflowY:"auto"}}>
         <div style={{padding:"18px 24px",borderBottom:`1px solid ${C.borderLight}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <span style={{fontSize:15,fontWeight:600,color:C.text}}>Profile & settings</span>
+          <span style={{fontSize:15,fontWeight:600,color:C.text}}>{isClient ? "Client profile" : "Profile & settings"}</span>
           <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:20,color:C.muted}}>×</button>
         </div>
         <div style={{padding:24,flex:1}}>
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}>
-            <div style={{width:60,height:60,borderRadius:"50%",background:`linear-gradient(135deg,${C.accent},#0D5535)`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:22,fontWeight:700,marginBottom:10}}>{(name||displayName).charAt(0)||"?"}</div>
+            <div style={{width:72,height:72,borderRadius:"50%",background:avatarUrl ? `url(${avatarUrl}) center/cover` : `linear-gradient(135deg,${C.accent},#0D5535)`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:24,fontWeight:700,marginBottom:10,overflow:"hidden"}}>
+              {!avatarUrl && ((name||displayName).charAt(0)||"?").toUpperCase()}
+            </div>
             <div style={{fontSize:14,fontWeight:600,color:C.text}}>{name||displayName||"User"}</div>
-            <div style={{fontSize:12,color:C.muted,marginTop:2}}>Pro plan · Active</div>
+            <div style={{fontSize:12,color:C.muted,marginTop:2}}>{isClient ? "Viewing as client / hiring" : "Freelancer"}</div>
           </div>
+          <Field label="Profile photo">
+            <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+              <input style={{...inp,flex:1,minWidth:0}} value={avatarUrl} onChange={e=>setAvatarUrl(e.target.value)} placeholder="Image URL"/>
+              <button style={btn("ghost",{padding:"8px 12px"})} onClick={()=>setAvatarUrl("")}>Remove</button>
+            </div>
+            <p style={{fontSize:11,color:C.muted,marginTop:4}}>Paste an image URL, or remove to use initial.</p>
+          </Field>
           <Field label="Display name"><input style={inp} value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/></Field>
-          <Field label="Email"><input style={inp} value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></Field>
-          <Field label="Default hourly rate ($)"><input style={inp} type="number" value={rate} onChange={e=>setRate(+e.target.value)}/></Field>
+          <Field label="Email"><input style={{...inp,opacity:.9}} value={email} readOnly placeholder="you@example.com"/></Field>
+          {isClient && (
+            <Field label="Studio / Agency name" hint="Shown when you hire or approve time as a client">
+              <input style={inp} value={studioName ?? ""} onChange={e=>setStudioName(e.target.value)} placeholder="Your studio or agency"/>
+            </Field>
+          )}
+          {!isClient && <Field label="Default hourly rate ($)"><input style={inp} type="number" value={rate} onChange={e=>setRate(+e.target.value)} min={0}/></Field>}
           {onLogout&&(
             <div style={{marginTop:16,paddingTop:16,borderTop:`1px solid ${C.borderLight}`}}>
-              <button onClick={onLogout}
-                style={{...btn("ghost",{width:"100%",fontSize:13})}}>
-                Log out
-              </button>
+              <button onClick={()=>{onLogout();onClose();}} style={{...btn("ghost",{width:"100%",fontSize:13})}}>Log out</button>
             </div>
           )}
           <div style={{marginTop:20,paddingTop:20,borderTop:`1px solid ${C.borderLight}`}}>
-            <div style={LBL}>Current plan</div>
-            <div style={{background:C.accentLight,border:`1px solid ${C.accentBorder}`,borderRadius:10,padding:"14px 16px",marginBottom:16}}>
-              <div style={{fontSize:14,fontWeight:600,color:C.accent}}>Pro</div>
-              <div style={{fontSize:12,color:C.sub,marginTop:3}}>Heatmaps · WQI · AI summaries · Unlimited sessions</div>
-              <div style={{fontSize:11,color:C.muted,marginTop:2}}>Renews Mar 23, 2026</div>
-            </div>
+            <div style={LBL}>Integrations (optional)</div>
+            {["GitHub","LinkedIn","Twitter"].map(k=>(
+              <div key={k} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:`1px solid ${C.borderLight}`}}>
+                <span style={{fontSize:13,color:C.text,fontWeight:500}}>{k}</span>
+                <span style={{fontSize:12,fontWeight:500,color:C.muted}}>Not connected</span>
+              </div>
+            ))}
           </div>
-          <div style={LBL}>Integrations</div>
-          {[["GitHub","Connected"],["Jira","Not connected"],["Linear","Not connected"]].map(([k,v])=>(
-            <div key={k} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:`1px solid ${C.borderLight}`}}>
-              <span style={{fontSize:13,color:C.text,fontWeight:500}}>{k}</span>
-              <span style={{fontSize:12,fontWeight:500,color:v==="Connected"?C.accent:C.muted}}>{v}</span>
-            </div>
-          ))}
         </div>
         <div style={{padding:"16px 24px",borderTop:`1px solid ${C.borderLight}`,display:"flex",gap:8}}>
           <button style={{...btn("ghost"),flex:1}} onClick={onClose}>Discard</button>
-          <button style={{...btn("primary"),flex:1}} onClick={save}>Save changes</button>
+          <button style={{...btn("primary"),flex:1}} onClick={doSave}>Save changes</button>
         </div>
       </div>
     </div>
@@ -849,7 +1050,7 @@ function SubscriptionModal({onClose,onToast}){
             <div style={{marginTop:14,display:"flex",flexDirection:"column",gap:6}}>
               {p.features.map(f=>(
                 <div key={f} style={{display:"flex",gap:6,alignItems:"flex-start"}}>
-                  <span style={{color:p.accent,fontSize:12,lineHeight:1.6}}>✓</span>
+                  <span style={{color:p.accent,display:"flex",flexShrink:0,marginTop:2}}>{Icon.check(12)}</span>
                   <span style={{fontSize:12,color:C.sub}}>{f}</span>
                 </div>
               ))}
@@ -1088,29 +1289,43 @@ function AnalyticsMetrics({sessions}){
    ── ROLE VIEWS ──
 ═══════════════════════════════════════════════════════════════════════════ */
 
-/* CLIENT DASHBOARD */
+/* CLIENT DASHBOARD — hiring view; no dummy data. Clients from shared sessions. */
 function ClientDashboard({sessions,milestones,onApprove,onToast}){
-  const [activeClient]=useState("Volta Studio");
+  const sharedClients = [...new Set(sessions.filter(s=>s.shared).map(s=>s.client).filter(Boolean))].sort();
+  const [activeClient,setActiveClient]=useState(sharedClients[0]||"");
   const mySessions=sessions.filter(s=>s.shared&&s.client===activeClient);
   const myMilestones=milestones.filter(m=>m.client===activeClient);
   const pending=mySessions.filter(s=>!s.approved);
-  const totalHrs=mySessions.reduce((a,s)=>a+s.duration,0);
-  const avgWqi=mySessions.length?Math.round(mySessions.reduce((a,s)=>a+s.wqi,0)/mySessions.length):0;
+  const totalHrs=mySessions.reduce((a,s)=>a+(s.verifiedSec??s.duration??0),0);
+  const avgWqi=mySessions.length?Math.round(mySessions.reduce((a,s)=>a+(s.wqi??0),0)/mySessions.length):0;
 
   return(
     <div style={{display:"flex",flexDirection:"column",gap:22}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",flexWrap:"wrap",gap:12}}>
         <div>
           <h1 style={{fontSize:24,fontWeight:600,letterSpacing:"-0.03em",color:C.text}}>Client View</h1>
-          <p style={{fontSize:13,color:C.sub,marginTop:5}}>Viewing as: <strong>{activeClient}</strong> — shared sessions only</p>
+          <p style={{fontSize:13,color:C.sub,marginTop:5}}>Sessions shared with you. Approve time or hire freelancers.</p>
         </div>
+        {sharedClients.length>0&&(
+          <select value={activeClient} onChange={e=>setActiveClient(e.target.value)} style={{...inp,width:"auto",minWidth:160}}>
+            {sharedClients.map(c=><option key={c} value={c}>{c}</option>)}
+          </select>
+        )}
         <div style={{display:"flex",gap:8,padding:"7px 14px",borderRadius:10,background:C.accentLight,border:`1px solid ${C.accentBorder}`,alignItems:"center"}}>
           <div style={{width:7,height:7,borderRadius:"50%",background:C.accent}}/>
           <span style={{fontSize:12,fontWeight:600,color:C.accent}}>Transparency verified</span>
         </div>
       </div>
 
+      {sharedClients.length===0 && (
+        <div style={{...card,textAlign:"center",padding:40,color:C.muted}}>
+          <p style={{fontSize:14,marginBottom:8}}>No sessions shared with you yet.</p>
+          <p style={{fontSize:13}}>When freelancers share sessions with you, they will appear here for approval.</p>
+        </div>
+      )}
+
       {/* Summary stats */}
+      {sharedClients.length>0 && (
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
         {[
           {l:"Total hours",v:`${fmtHr(totalHrs)}h`,n:"This month"},
@@ -1125,9 +1340,10 @@ function ClientDashboard({sessions,milestones,onApprove,onToast}){
           </div>
         ))}
       </div>
+      )}
 
       {/* Pending approvals */}
-      {pending.length>0&&(
+      {sharedClients.length>0 && pending.length>0&&(
         <div style={{...card,border:`1px solid ${C.warnBorder}`,background:C.warnLight}}>
           <div style={{...LBL,color:C.warn}}>Pending your approval</div>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -1147,7 +1363,8 @@ function ClientDashboard({sessions,milestones,onApprove,onToast}){
         </div>
       )}
 
-      {/* Milestones */}
+      {/* Milestones — only when we have milestone data from API later */}
+      {myMilestones.length>0&&(
       <div style={{...card}}>
         <div style={LBL}>Milestone progress</div>
         <div style={{display:"flex",flexDirection:"column",gap:16}}>
@@ -1168,8 +1385,10 @@ function ClientDashboard({sessions,milestones,onApprove,onToast}){
           ))}
         </div>
       </div>
+      )}
 
-      {/* Approved sessions (read-only, no invasive data) */}
+      {/* Shared sessions (read-only) */}
+      {sharedClients.length>0 && (
       <div>
         <div style={LBL}>Shared sessions</div>
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -1190,7 +1409,7 @@ function ClientDashboard({sessions,milestones,onApprove,onToast}){
                   <div style={{fontSize:10,color:C.muted}}>WQI</div>
                 </div>
                 {s.approved
-                  ?<span style={{fontSize:11,color:C.accent,fontWeight:600,background:C.accentLight,padding:"3px 10px",borderRadius:99,border:`1px solid ${C.accentBorder}`}}>✓ Approved</span>
+                  ?<span style={{fontSize:11,color:C.accent,fontWeight:600,background:C.accentLight,padding:"3px 10px",borderRadius:99,border:`1px solid ${C.accentBorder}`,display:"inline-flex",alignItems:"center",gap:4}}><span style={{display:"flex"}}>{Icon.check(10)}</span> Approved</span>
                   :<span style={{fontSize:11,color:C.warn,fontWeight:600,background:C.warnLight,padding:"3px 10px",borderRadius:99,border:`1px solid ${C.warnBorder}`}}>Pending</span>
                 }
               </div>
@@ -1198,11 +1417,12 @@ function ClientDashboard({sessions,milestones,onApprove,onToast}){
           ))}
         </div>
       </div>
+      )}
     </div>
   );
 }
 
-/* ADMIN DASHBOARD */
+/* ADMIN DASHBOARD — not shown to users; separate admin app */
 function AdminDashboard({sessions,onToast}){
   const [weights,setWeights]=useState({focus:0.45,output:0.30,consistency:0.25});
   const [users,setUsers]=useState(ADMIN_USERS);
@@ -1315,7 +1535,6 @@ function AdminDashboard({sessions,onToast}){
 const ROLE_NAVS = {
   freelancer:[{id:"dashboard",label:"Overview"},{id:"sessions",label:"Sessions"},{id:"heatmap",label:"Heatmap"},{id:"analytics",label:"Analytics"},{id:"badges",label:"Badges"}],
   client:    [{id:"client",label:"Client view"}],
-  admin:     [{id:"admin",label:"Admin panel"}],
 };
 
 export default function WorkRate({
@@ -1328,6 +1547,8 @@ export default function WorkRate({
   onAdjustSession = null,
   onLogout        = null,
   onRefresh       = null,
+  onUpdateProfile = null,
+  onLookupClients = null,
 }){
   /* ── Role switcher ── */
   const [role,setRole]   = useState("freelancer");
@@ -1374,12 +1595,11 @@ export default function WorkRate({
   const [deepWork,setDeepWork]=useState(false);
 
   /* ── Sessions ── */
-  // Use server sessions when available; fall back to mock data for demo mode
-  const [sessions,setSessions]=useState(initialSessions.length > 0 ? initialSessions : INIT_SESSIONS);
+  // Clean slate: only API data. New users see empty dashboard; no dummy data.
+  const [sessions,setSessions]=useState(initialSessions ?? []);
 
-  // Sync when server data arrives (e.g. after refresh)
   useEffect(() => {
-    if (initialSessions.length > 0) setSessions(initialSessions);
+    setSessions(prev => Array.isArray(initialSessions) ? initialSessions : prev);
   }, [initialSessions]);
   const [filter,setFilter]   =useState("All time");
   // Build client filter list from API clients + unique session clients
@@ -1437,12 +1657,13 @@ export default function WorkRate({
     if(onAdjustSession) onAdjustSession(updated).catch(()=>{}); // sync to server
   };
 
-  /* ── Role switch resets tab ── */
+  /* ── Role switch: freelancer vs client only (admin is separate app). Clear confirmation when switching to client. ── */
+  const [clientModeConfirmed, setClientModeConfirmed] = useState(false);
   const switchRole=(r)=>{
+    if (r === "client") setClientModeConfirmed(true);
     setRole(r);
     if(r==="freelancer") setTab("dashboard");
     if(r==="client")     setTab("client");
-    if(r==="admin")      setTab("admin");
   };
 
   /* ── Copy proof link ── */
@@ -1475,11 +1696,11 @@ export default function WorkRate({
 
       {/* ── Modals ── */}
       {modal==="aiSummary"  && aiSummary && <AISummaryModal summary={aiSummary} task={task} onClose={closeModal} onInvoice={()=>{setModalTarget(sessions[0]);setModal("invoice");}} onSave={()=>{addSession({id:Date.now(),date:"Today",task:task||"Untitled session",start:"—",end:"—",duration:aiSummary.total*3600,wqi:aiSummary.wqi,switches:aiSummary.switches,idle:aiSummary.idleRatio,tags:[],client:"Volta Studio",approved:false,shared:false});setTask("");}}/>}
-      {modal==="newSession" && <NewSessionModal onClose={closeModal} onSave={addSession} clients={allClientNames.length ? allClientNames : CLIENTS_LIST}/>}
-      {modal==="invoice"    && modalTarget && <InvoiceModal session={modalTarget} onClose={closeModal} onToast={showToast}/>}
+      {modal==="newSession" && <NewSessionModal onClose={closeModal} onSave={addSession} clients={serverClients ?? []} onLookupClients={onLookupClients}/>}
+      {modal==="invoice"    && modalTarget && <InvoiceModal session={modalTarget} onClose={closeModal} onToast={showToast} currentUser={currentUser}/>}
       {modal==="export"     && modalTarget && <ExportModal  session={modalTarget} onClose={closeModal} onToast={showToast}/>}
       {modal==="adjust"     && modalTarget && <AdjustTimeModal session={modalTarget} onClose={closeModal} onSave={adjustSession} onToast={showToast}/>}
-      {modal==="profile"    && <ProfileDrawer onClose={closeModal} onToast={showToast} currentUser={currentUser} onLogout={onLogout}/>}
+      {modal==="profile"    && <ProfileDrawer onClose={closeModal} onToast={showToast} currentUser={currentUser} onLogout={onLogout} role={role} onUpdateProfile={onUpdateProfile}/>}
       {modal==="deepWork"   && <DeepWorkModal active={deepWork} onToggle={()=>setDeepWork(d=>!d)} onClose={closeModal}/>}
       {modal==="subscription"&&<SubscriptionModal onClose={closeModal} onToast={showToast}/>}
 
@@ -1498,9 +1719,9 @@ export default function WorkRate({
           <span style={{fontSize:15,fontWeight:700,letterSpacing:"-0.02em",color:C.text}}>WorkRate</span>
         </div>
 
-        {/* Role switcher */}
+        {/* Role switcher: Freelancer | Client (admin is separate; not shown to users) */}
         <div style={{display:"flex",gap:2,background:C.borderLight,borderRadius:9,padding:3}}>
-          {[["freelancer","Freelancer"],["client","Client"],["admin","Admin"]].map(([r,l])=>(
+          {[["freelancer","Freelancer"],["client","Client"]].map(([r,l])=>(
             <button key={r} onClick={()=>switchRole(r)}
               style={{padding:"4px 12px",borderRadius:7,border:"none",fontSize:12,fontWeight:role===r?600:400,
                 background:role===r?C.surface:"transparent",
@@ -1548,8 +1769,8 @@ export default function WorkRate({
             <button onClick={onRefresh} title="Refresh data" style={{padding:"6px 10px",borderRadius:8,border:`1px solid ${C.border}`,background:"transparent",color:C.sub,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>↻ Refresh</button>
           )}
           <div onClick={()=>setModal("profile")}
-            style={{width:30,height:30,borderRadius:"50%",background:`linear-gradient(135deg,${C.accent},#0D5535)`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>
-            {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : role==="admin"?"⚙":role==="client"?"C":"A"}
+            style={{width:30,height:30,borderRadius:"50%",background:currentUser?.avatar_url ? `url(${currentUser.avatar_url}) center/cover` : `linear-gradient(135deg,${C.accent},#0D5535)`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+            {!currentUser?.avatar_url && (currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : (currentUser?.email?.charAt(0) || "?").toUpperCase())}
           </div>
         </div>
       </header>
@@ -1557,11 +1778,19 @@ export default function WorkRate({
       {/* ────────── MAIN ────────── */}
       <main style={{maxWidth:1060,margin:"0 auto",padding:"32px 36px"}}>
 
-        {/* CLIENT VIEW */}
-        {tab==="client"&&<ClientDashboard sessions={sessions} milestones={MILESTONES} onApprove={approveSession} onToast={showToast}/>}
+        {/* Client mode banner: make it clear they switched context */}
+        {role==="client"&&(
+          <div style={{background:C.accentLight,border:`1px solid ${C.accentBorder}`,borderRadius:12,padding:"12px 20px",marginBottom:20,display:"flex",alignItems:"center",gap:12}}>
+            <span style={{color:C.accent,display:"flex",alignItems:"center"}}>{Icon.handshake(20)}</span>
+            <div>
+              <div style={{fontSize:13,fontWeight:600,color:C.text}}>Viewing as Client</div>
+              <div style={{fontSize:12,color:C.sub,marginTop:2}}>Sessions shared with you appear here. Approve time or hire freelancers from this view.</div>
+            </div>
+          </div>
+        )}
 
-        {/* ADMIN VIEW */}
-        {tab==="admin"&&<AdminDashboard sessions={sessions} onToast={showToast}/>}
+        {/* CLIENT VIEW */}
+        {tab==="client"&&<ClientDashboard sessions={sessions} milestones={[]} onApprove={approveSession} onToast={showToast}/>}
 
         {/* ══ FREELANCER: OVERVIEW ══ */}
         {tab==="dashboard"&&(
@@ -1573,7 +1802,7 @@ export default function WorkRate({
               const activeDays = serverStats?.activeDays ?? 0;
               const greeting = (()=>{ const h=new Date().getHours(); return h<12?"Good morning":h<18?"Good afternoon":"Good evening"; })();
               const userName = currentUser?.name || currentUser?.email?.split("@")[0] || "there";
-              const dateLine = new Date().toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"}) + (activeDays ? ` · ${activeDays} active day${activeDays!==1?"s":""} 🔥` : "");
+              const dateLine = new Date().toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"}) + (activeDays ? ` · ${activeDays} active day${activeDays!==1?"s":""}` : "");
               return (
             <>
             <div>
@@ -1625,14 +1854,25 @@ export default function WorkRate({
                 </div>
               </div>
 
+              {/* Chrome extension — link and upload */}
+              <div style={{...card,border:`1px solid ${C.accentBorder}`,background:C.accentLight}}>
+                <div style={LBL}>Chrome extension</div>
+                <p style={{fontSize:13,color:C.sub,lineHeight:1.5,marginBottom:12}}>Track time in the browser. Sessions sync here automatically. Install the WorkRate extension to record verified time and upload activity.</p>
+                <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer" style={{...btn("accent",{display:"inline-flex",alignItems:"center",gap:6,textDecoration:"none"})}}>
+                  {Icon.doc(16)} Connect extension
+                </a>
+              </div>
+
               {/* Recent sessions */}
               <div style={{...card}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
                   <div style={LBL}>Recent sessions</div>
-                  <button onClick={()=>setTab("sessions")} style={{fontSize:12,fontWeight:600,color:C.accent,background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>View all →</button>
+                  <button onClick={()=>setTab("sessions")} style={{fontSize:12,fontWeight:600,color:C.accent,background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>View all</button>
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                  {sessions.slice(0,3).map(s=>(
+                  {sessions.length===0 ? (
+                    <div style={{textAlign:"center",padding:24,color:C.muted,fontSize:13}}>No sessions yet. Add one manually or use the Chrome extension to track time.</div>
+                  ) : sessions.slice(0,3).map(s=>(
                     <div key={s.id} onClick={()=>setTab("sessions")}
                       style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:9,background:C.bg,border:`1px solid ${C.borderLight}`,cursor:"pointer",transition:"border-color .15s"}}
                       onMouseEnter={e=>e.currentTarget.style.borderColor=C.accentBorder}
@@ -1694,8 +1934,15 @@ export default function WorkRate({
           <div style={{display:"flex",flexDirection:"column",gap:22}}>
             <div>
               <h1 style={{fontSize:24,fontWeight:600,letterSpacing:"-0.03em",color:C.text}}>Activity Heatmap</h1>
-              <p style={{fontSize:13,color:C.sub,marginTop:5}}>5-minute blocks · Today · Hover for details</p>
+              <p style={{fontSize:13,color:C.sub,marginTop:5}}>5-minute blocks. Track time with the Chrome extension to see activity here.</p>
             </div>
+            {sessions.length===0 ? (
+              <div style={{...card,textAlign:"center",padding:48,color:C.muted}}>
+                <p style={{fontSize:14,marginBottom:12}}>No activity data yet.</p>
+                <p style={{fontSize:13}}>Install the WorkRate Chrome extension and track a session to see your heatmap.</p>
+              </div>
+            ) : (
+            <>
             <div style={card}><Heatmap data={HEATMAP}/></div>
 
             {/* Context switch graph */}
@@ -1722,6 +1969,8 @@ export default function WorkRate({
                 ))}
               </div>
             </div>
+            </>
+            )}
           </div>
         )}
 
@@ -1793,10 +2042,11 @@ export default function WorkRate({
                 </div>
                 <p style={{fontSize:12,color:C.sub,lineHeight:1.6,marginBottom:16}}>Share verified work quality with clients. No sensitive data exposed.</p>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
-                  {[["✓","Verified Hours"],["◎","WQI Score"],["⟳","Context Integrity"],["◈","Idle Transparency"]].map(([icon,name])=>(
+                  {[["Verified Hours","Tracked time"],["WQI Score","Quality index"],["Context Integrity","Tab focus"],["Idle Transparency","Idle logged"]].map(([name,sub])=>(
                     <div key={name} style={{padding:"10px",borderRadius:9,background:C.surface,border:`1px solid ${C.accentBorder}`,textAlign:"center"}}>
-                      <div style={{fontSize:16,marginBottom:4}}>{icon}</div>
+                      <div style={{display:"flex",justifyContent:"center",marginBottom:4,color:C.accent}}>{Icon.check(16)}</div>
                       <div style={{fontSize:11,fontWeight:500,color:C.sub}}>{name}</div>
+                      <div style={{fontSize:10,color:C.muted}}>{sub}</div>
                     </div>
                   ))}
                 </div>

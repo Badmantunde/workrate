@@ -55,13 +55,14 @@ router.post('/login', async (req, res) => {
     if (!email || !password) return res.status(400).json({ error: 'email and password required' });
 
     const { rows } = await query(
-      `SELECT id, email, name, plan, hourly_rate, password_hash FROM users WHERE email = $1`,
+      `SELECT id, email, name, plan, hourly_rate, password_hash, suspended FROM users WHERE email = $1`,
       [email.toLowerCase()]
     );
 
     if (!rows.length) return res.status(401).json({ error: 'Invalid credentials' });
 
     const user = rows[0];
+    if (user.suspended) return res.status(403).json({ error: 'Account suspended. Contact support.' });
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
@@ -108,7 +109,7 @@ router.post('/logout', requireAuth, async (req, res) => {
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT id, email, name, plan, hourly_rate, avatar_url, timezone, created_at
+      `SELECT id, email, name, plan, hourly_rate, avatar_url, timezone, studio_name, created_at
        FROM users WHERE id = $1`,
       [req.user.id]
     );
@@ -122,15 +123,28 @@ router.get('/me', requireAuth, async (req, res) => {
 /* ── PATCH /api/auth/me ─────────────────────────────────────────────── */
 router.patch('/me', requireAuth, async (req, res) => {
   try {
-    const { name, hourly_rate, timezone } = req.body;
+    const { name, hourly_rate, timezone, avatar_url, studio_name } = req.body;
+    const updates = [
+      'name = COALESCE($1, name)',
+      'hourly_rate = COALESCE($2, hourly_rate)',
+      'timezone = COALESCE($3, timezone)',
+    ];
+    const params = [name, hourly_rate, timezone];
+    let idx = 4;
+    if (Object.prototype.hasOwnProperty.call(req.body, 'avatar_url')) {
+      updates.push(`avatar_url = $${idx}`);
+      params.push(avatar_url);
+      idx++;
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'studio_name')) {
+      updates.push(`studio_name = $${idx}`);
+      params.push(studio_name);
+      idx++;
+    }
+    params.push(req.user.id);
     const { rows } = await query(
-      `UPDATE users SET
-         name         = COALESCE($1, name),
-         hourly_rate  = COALESCE($2, hourly_rate),
-         timezone     = COALESCE($3, timezone)
-       WHERE id = $4
-       RETURNING id, email, name, plan, hourly_rate, timezone`,
-      [name, hourly_rate, timezone, req.user.id]
+      `UPDATE users SET ${updates.join(', ')} WHERE id = $${params.length} RETURNING id, email, name, plan, hourly_rate, timezone, avatar_url, studio_name`,
+      params
     );
     return res.json({ user: rows[0] });
   } catch (err) {

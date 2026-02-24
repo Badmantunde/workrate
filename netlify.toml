@@ -38,7 +38,13 @@
   to     = "/index.html"
   status = 200
 
-# 3. Catch-all SPA fallback
+# 3. Admin app (standalone HTML)
+[[redirects]]
+  from   = "/admin"
+  to     = "/admin.html"
+  status = 200
+
+# 4. Catch-all SPA fallback
 [[redirects]]
   from   = "/*"
   to     = "/index.html"

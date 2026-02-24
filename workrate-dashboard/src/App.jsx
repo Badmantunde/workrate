@@ -15,7 +15,7 @@ import WorkRate   from './WorkRate.jsx';
 import Login      from './components/Login.jsx';
 import {
   getStoredUser,
-  clearTokens,
+  setStoredUser,
   getSessions,
   getSessionStats,
   createSession,
@@ -23,6 +23,9 @@ import {
   approveSession,
   rejectSession,
   getClients,
+  lookupClientsByEmail,
+  getMe,
+  updateMe,
   logout,
 } from './api/client.js';
 
@@ -34,17 +37,22 @@ export default function App() {
   const [loading,  setLoading]  = useState(false);
   const [apiError, setApiError] = useState(null);
 
-  /* ── Load data when user is authenticated ── */
+  /* ── Load full profile (avatar, etc.) and data when authenticated ── */
   const loadAll = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     setApiError(null);
     try {
-      const [sessRes, statsRes, clientRes] = await Promise.all([
+      const [meRes, sessRes, statsRes, clientRes] = await Promise.all([
+        getMe().catch(() => null),
         getSessions({ limit: 100 }),
         getSessionStats(),
         getClients(),
       ]);
+      if (meRes?.user) {
+        setUser(meRes.user);
+        setStoredUser(meRes.user);
+      }
       // Normalize API sessions to dashboard shape (client, duration, etc.)
       const raw = sessRes?.sessions ?? [];
       const normalized = raw.map((s) => normalizeSession(s));
@@ -172,6 +180,20 @@ export default function App() {
   }
 
   /* ── Main dashboard ── */
+  async function handleUpdateProfile(fields) {
+    try {
+      const data = await updateMe(fields);
+      if (data?.user) {
+        setUser(data.user);
+        setStoredUser(data.user);
+      }
+      return data;
+    } catch (err) {
+      console.error('[updateProfile]', err.message);
+      throw err;
+    }
+  }
+
   return (
     <WorkRate
       /* Real data */
@@ -185,6 +207,13 @@ export default function App() {
       onAdjustSession={handleAdjustSession}
       onLogout={handleLogout}
       onRefresh={loadAll}
+      onUpdateProfile={handleUpdateProfile}
+      onLookupClients={async (email) => {
+        try {
+          const d = await lookupClientsByEmail(email);
+          return d?.clients ?? [];
+        } catch (_) { return []; }
+      }}
     />
   );
 }

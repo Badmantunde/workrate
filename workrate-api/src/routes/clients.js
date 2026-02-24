@@ -15,8 +15,20 @@ const router = Router();
 router.use(requireAuth);
 
 /* ─── GET /api/clients ───────────────────────────────────────────────────── */
+/* Query: ?email=... to lookup by email (returns id, name, email, logo_url for dropdown) */
 router.get('/', async (req, res) => {
   try {
+    const { email } = req.query;
+    if (email && typeof email === 'string' && email.includes('@')) {
+      const { rows } = await query(
+        `SELECT id, name, email, logo_url, rate
+         FROM clients
+         WHERE user_id = $1 AND LOWER(TRIM(email)) = LOWER(TRIM($2))
+         LIMIT 5`,
+        [req.user.id, email]
+      );
+      return res.json({ clients: rows, lookup: true });
+    }
     const { rows } = await query(
       `SELECT
          c.*,
@@ -81,14 +93,15 @@ router.get('/:id', async (req, res) => {
 /* ─── PATCH /api/clients/:id ─────────────────────────────────────────────── */
 router.patch('/:id', async (req, res) => {
   try {
-    const { name, email, rate } = req.body;
+    const { name, email, rate, logo_url } = req.body;
     const { rows } = await query(
       `UPDATE clients SET
-         name  = COALESCE($1, name),
-         email = COALESCE($2, email),
-         rate  = COALESCE($3, rate)
-       WHERE id=$4 AND user_id=$5 RETURNING *`,
-      [name, email, rate, req.params.id, req.user.id]
+         name     = COALESCE($1, name),
+         email    = COALESCE($2, email),
+         rate     = COALESCE($3, rate),
+         logo_url = COALESCE($4, logo_url)
+       WHERE id=$5 AND user_id=$6 RETURNING *`,
+      [name, email, rate, logo_url, req.params.id, req.user.id]
     );
     if (!rows.length) return res.status(404).json({ error: 'Client not found' });
     return res.json({ client: rows[0] });
