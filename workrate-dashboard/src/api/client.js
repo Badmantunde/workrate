@@ -9,6 +9,7 @@
 const API = import.meta.env.VITE_API_URL ?? '';
 // If VITE_API_URL is empty, Vite's proxy forwards /api → localhost:3001 in dev.
 // In production (Netlify), set VITE_API_URL to your Railway URL.
+// e.g. https://workrate-production.up.railway.app
 
 /* ── Token storage ─────────────────────────────────────────────────────── */
 const KEY = {
@@ -18,7 +19,7 @@ const KEY = {
 };
 
 export function getStoredUser()   { try { return JSON.parse(localStorage.getItem(KEY.user)); } catch { return null; } }
-export function setStoredUser(user) { try { localStorage.setItem(KEY.user, JSON.stringify(user)); } catch (_) {} }
+export function setStoredUser(u)  { try { localStorage.setItem(KEY.user, JSON.stringify(u)); } catch (_) {} }
 export function getAccessToken()  { return localStorage.getItem(KEY.access); }
 function getRefreshToken()        { return localStorage.getItem(KEY.refresh); }
 
@@ -43,7 +44,12 @@ async function req(path, options = {}, retry = true) {
     ...(options.headers ?? {}),
   };
 
-  const res = await fetch(`${API}/api${path}`, { ...options, headers });
+  let res;
+  try {
+    res = await fetch(`${API}/api${path}`, { ...options, headers });
+  } catch (err) {
+    throw new Error('Network error — check your connection');
+  }
 
   // Token expired — try to refresh once then retry
   if (res.status === 401 && retry) {
@@ -62,8 +68,9 @@ async function req(path, options = {}, retry = true) {
         }
       } catch (_) {}
     }
+    // Refresh failed — clear tokens, App.jsx will show the login screen
     clearTokens();
-    window.location.href = '/login';
+    window.location.href = '/';
     return;
   }
 
@@ -147,11 +154,9 @@ export async function getClients(params = {}) {
   return req(`/clients${qs ? `?${qs}` : ''}`);
 }
 
-/** Lookup clients by email (returns id, name, email, logo_url for dropdown) */
 export async function lookupClientsByEmail(email) {
   if (!email || !String(email).includes('@')) return { clients: [] };
-  const data = await getClients({ email: String(email).trim() });
-  return data;
+  return getClients({ email: String(email).trim() });
 }
 
 export async function createClient(fields) {

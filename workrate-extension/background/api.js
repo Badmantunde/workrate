@@ -15,10 +15,9 @@
  */
 
 // ── API URL ─────────────────────────────────────────────────────────────────
-// Replace with your Railway URL before publishing to the Chrome Web Store.
-// For local development: http://localhost:3001/api
-// For production:        https://your-api.railway.app/api
-const API_BASE = 'workrate-production.up.railway.app';
+// For local development swap to: http://localhost:3001/api
+// For production this points to your Railway deployment.
+const API_BASE = 'https://workrate-production.up.railway.app/api';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    TOKEN STORAGE
