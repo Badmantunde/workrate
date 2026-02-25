@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WorkRate Blog | Ideas on Trust, Time and Remote Work</title>
+  <meta name="description" content="Essays and product updates from the WorkRate team on verified time tracking, client trust, and building healthier freelance relationships."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--bg:#F7F6F3;--surface:#FFFFFF;--border:#E3E0D9;--border-light:#EEECE8;--text:#18170F;--sub:#6A6760;--muted:#A5A29A;--accent:#1B7A50;--accent-light:#EDF6F1;--accent-bd:#BEE0CE;--font:'DM Sans',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;--radius:14px;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;}
+    a{text-decoration:none;color:inherit;}
+    nav{position:sticky;top:0;z-index:10;background:rgba(247,246,243,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--border-light);height:56px;display:flex;align-items:center;}
+    .nav-inner{max-width:1080px;margin:0 auto;padding:0 32px;width:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;}
+    .nav-logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;letter-spacing:-0.02em;}
+    .nav-logo-mark{width:26px;height:26px;border-radius:7px;background:var(--accent);display:flex;align-items:center;justify-content:center;}
+    .nav-links{display:flex;gap:22px;font-size:14px;color:var(--sub);}
+    .nav-links a:hover{color:var(--text);}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:9px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .16s;}
+    .btn-primary{background:var(--accent);color:#fff;}
+    .btn-primary:hover{background:#0D5535;transform:translateY(-1px);}
+    .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--sub);}
+    .btn-ghost:hover{border-color:var(--accent-bd);color:var(--accent);}
+    main{max-width:980px;margin:40px auto 64px;padding:0 32px;}
+    h1{font-size:30px;letter-spacing:-0.02em;font-weight:700;margin-bottom:8px;}
+    p{font-size:15px;color:var(--sub);margin-bottom:12px;}
+    .label{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+    .posts{margin-top:26px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;}
+    .post{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:18px 18px 20px;transition:border-color .15s,box-shadow .15s;}
+    .post:hover{border-color:var(--accent-bd);box-shadow:0 6px 24px rgba(24,23,15,.08);}
+    .post-title{font-size:16px;font-weight:600;margin-bottom:6px;letter-spacing:-0.01em;}
+    .post-meta{font-size:12px;color:var(--muted);margin-bottom:8px;}
+    .post-body{font-size:14px;color:var(--sub);}
+    .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;background:var(--accent-light);color:var(--accent);border:1px solid var(--accent-bd);margin-bottom:8px;}
+    footer{background:#0F0F0B;color:rgba(255,255,255,.45);padding:32px 0 26px;margin-top:40px;}
+    .footer-inner{max-width:1080px;margin:0 auto;padding:0 32px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:28px;font-size:12px;}
+    .footer-links{display:flex;gap:32px;}
+    .footer-col h4{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-bottom:8px;}
+    .footer-col a{display:block;font-size:12px;color:rgba(255,255,255,.55);margin-bottom:6px;}
+    .footer-col a:hover{color:rgba(255,255,255,.85);}
+    @media(max-width:860px){
+      nav{height:auto;}
+      .nav-inner{padding:10px 20px;}
+      main{padding:0 20px;}
+      .footer-inner{padding:0 20px;flex-direction:column;align-items:flex-start;}
+      .footer-links{flex-direction:column;}
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a href="/home" class="nav-logo">
+        <div class="nav-logo-mark">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <rect x="1" y="6" width="2" height="7" rx="1" fill="white" opacity=".6"/>
+            <rect x="4.5" y="3" width="2" height="10" rx="1" fill="white" opacity=".8"/>
+            <rect x="8" y="1" width="2" height="12" rx="1" fill="white"/>
+            <rect x="11.5" y="4" width="2" height="9" rx="1" fill="white" opacity=".7"/>
+          </svg>
+        </div>
+        WorkRate
+      </a>
+      <div class="nav-links">
+        <a href="/home#how-it-works">Product</a>
+        <a href="/blog">Blog</a>
+        <a href="/contact">Contact</a>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <a href="/dashboard" class="btn btn-ghost">Log in</a>
+        <a href="/dashboard" class="btn btn-primary">Open dashboard</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="label">WorkRate blog</div>
+    <h1>Ideas on trust, time and remote work.</h1>
+    <p>
+      This is where we share what we are learning about verified time tracking, client relationships,
+      and building calmer workflows for freelancers and distributed teams.
+    </p>
+
+    <div class="posts">
+      <article class="post">
+        <div class="badge">Foundations</div>
+        <h2 class="post-title">Why “proof of work” matters more than perfect timesheets</h2>
+        <div class="post-meta">Coming soon · Subscribe in the dashboard</div>
+        <p class="post-body">A practical look at how transparent time data reshapes client conversations, reduces disputes, and lets you charge confidently for focused work.</p>
+      </article>
+      <article class="post">
+        <div class="badge">Product</div>
+        <h2 class="post-title">How the WorkRate proof report is designed</h2>
+        <div class="post-meta">Coming soon</div>
+        <p class="post-body">Behind the scenes of the client-facing report, and the signals we chose to highlight so approvals stay fast and trust stays high.</p>
+      </article>
+      <article class="post">
+        <div class="badge">Playbooks</div>
+        <h2 class="post-title">A billing playbook for long-term freelance clients</h2>
+        <div class="post-meta">Coming soon</div>
+        <p class="post-body">Scripts, email templates, and reporting habits you can use with WorkRate to turn sporadic projects into stable retainers.</p>
+      </article>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <div class="nav-logo" style="color:rgba(255,255,255,.85);margin-bottom:8px;">
+          <div class="nav-logo-mark">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="6" width="2" height="7" rx="1" fill="white" opacity=".6"/>
+              <rect x="4.5" y="3" width="2" height="10" rx="1" fill="white" opacity=".8"/>
+              <rect x="8" y="1" width="2" height="12" rx="1" fill="white"/>
+              <rect x="11.5" y="4" width="2" height="9" rx="1" fill="white" opacity=".7"/>
+            </svg>
+          </div>
+          WorkRate
+        </div>
+        <div style="font-size:12px;max-width:230px;color:rgba(255,255,255,.55);">
+          Verified time tracking for freelancers and teams who care about client trust.
+        </div>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="/home#how-it-works">How it works</a>
+          <a href="/home#proof">Proof report</a>
+          <a href="/home#pricing">Pricing</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="/about">About</a>
+          <a href="/blog">Blog</a>
+          <a href="/changelog">Changelog</a>
+          <a href="/contact">Contact</a>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <a href="/privacy">Privacy policy</a>
+          <a href="/terms">Terms of service</a>
+          <a href="/security">Data & security</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
+

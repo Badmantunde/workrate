@@ -1,7 +1,8 @@
 # WorkRate — Netlify Configuration
 # ════════════════════════════════════════════════════════
 # Serves:
-#   /              → landing.html  (static landing page)
+#   /              → /home        (marketing landing)
+#   /home          → home.html    (static landing page)
 #   /dashboard     → index.html   (React SPA)
 #   /dashboard/*   → index.html   (React SPA — deep links)
 #   /admin         → admin.html   (standalone admin page)
@@ -15,10 +16,15 @@
 
 # ── Redirects (order matters — most specific first) ────────────────────
 
-# Root → landing page
+# Root → marketing home
 [[redirects]]
   from   = "/"
-  to     = "/landing.html"
+  to     = "/home"
+  status = 200
+
+[[redirects]]
+  from   = "/home"
+  to     = "/home.html"
   status = 200
 
 # Dashboard SPA — exact path
@@ -37,6 +43,42 @@
 [[redirects]]
   from   = "/admin"
   to     = "/admin.html"
+  status = 200
+
+# Marketing/supporting pages with pretty routes
+[[redirects]]
+  from   = "/about"
+  to     = "/about.html"
+  status = 200
+
+[[redirects]]
+  from   = "/blog"
+  to     = "/blog.html"
+  status = 200
+
+[[redirects]]
+  from   = "/changelog"
+  to     = "/changelog.html"
+  status = 200
+
+[[redirects]]
+  from   = "/contact"
+  to     = "/contact.html"
+  status = 200
+
+[[redirects]]
+  from   = "/privacy"
+  to     = "/privacy.html"
+  status = 200
+
+[[redirects]]
+  from   = "/terms"
+  to     = "/terms.html"
+  status = 200
+
+[[redirects]]
+  from   = "/security"
+  to     = "/security.html"
   status = 200
 
 # NOTE: No catch-all /* rule — without it Netlify serves files directly
