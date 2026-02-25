@@ -39,6 +39,14 @@ async function setupAdmin() {
       process.exit(1);
     }
     
+    // Ensure required columns exist on users table
+    console.log('Ensuring required columns exist on users table...');
+    await query(
+      `ALTER TABLE users
+         ADD COLUMN IF NOT EXISTS is_admin  BOOLEAN NOT NULL DEFAULT FALSE,
+         ADD COLUMN IF NOT EXISTS suspended BOOLEAN NOT NULL DEFAULT FALSE`
+    );
+    
     // Generate password hash
     console.log('Generating password hash...');
     const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);

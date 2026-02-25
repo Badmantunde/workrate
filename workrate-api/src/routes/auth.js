@@ -31,21 +31,14 @@ router.post('/register', async (req, res) => {
 
     const hash = await bcrypt.hash(password, 12);
     const { rows } = await query(
-      `INSERT INTO users (email, password_hash, name)
-       VALUES ($1, $2, $3)
+      `INSERT INTO users (email, password_hash, name, is_admin)
+       VALUES ($1, $2, $3, FALSE)
        RETURNING id, email, name, plan, hourly_rate, created_at`,
       [email.toLowerCase(), hash, name || '']
     );
 
-    const user = rows[0];
-    
-    // Auto-create Client and Freelancer profiles for new user
-    await query(
-      `INSERT INTO clients (user_id, name, email) VALUES ($1, $2, $3), ($1, $4, $3)
-       ON CONFLICT DO NOTHING`,
-      [user.id, 'Client', email.toLowerCase(), 'Freelancer']
-    );
-
+    const user         = rows[0];
+    user.is_admin      = false; // always false — admin only via setup-admin script
     const accessToken  = issueAccessToken(user);
     const refreshToken = await issueRefreshToken(user.id, 'Web');
 
@@ -63,7 +56,7 @@ router.post('/login', async (req, res) => {
     if (!email || !password) return res.status(400).json({ error: 'email and password required' });
 
     const { rows } = await query(
-      `SELECT id, email, name, plan, hourly_rate, password_hash, suspended FROM users WHERE email = $1`,
+      `SELECT id, email, name, plan, hourly_rate, password_hash, suspended, is_admin FROM users WHERE email = $1`,
       [email.toLowerCase()]
     );
 
@@ -117,7 +110,7 @@ router.post('/logout', requireAuth, async (req, res) => {
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT id, email, name, plan, hourly_rate, avatar_url, timezone, studio_name, github_url, linkedin_url, twitter_url, created_at
+      `SELECT id, email, name, plan, hourly_rate, avatar_url, timezone, studio_name, is_admin, created_at
        FROM users WHERE id = $1`,
       [req.user.id]
     );
@@ -131,7 +124,7 @@ router.get('/me', requireAuth, async (req, res) => {
 /* ── PATCH /api/auth/me ─────────────────────────────────────────────── */
 router.patch('/me', requireAuth, async (req, res) => {
   try {
-    const { name, hourly_rate, timezone, avatar_url, studio_name, github_url, linkedin_url, twitter_url } = req.body;
+    const { name, hourly_rate, timezone, avatar_url, studio_name } = req.body;
     const updates = [
       'name = COALESCE($1, name)',
       'hourly_rate = COALESCE($2, hourly_rate)',
@@ -149,24 +142,9 @@ router.patch('/me', requireAuth, async (req, res) => {
       params.push(studio_name);
       idx++;
     }
-    if (Object.prototype.hasOwnProperty.call(req.body, 'github_url')) {
-      updates.push(`github_url = $${idx}`);
-      params.push(github_url);
-      idx++;
-    }
-    if (Object.prototype.hasOwnProperty.call(req.body, 'linkedin_url')) {
-      updates.push(`linkedin_url = $${idx}`);
-      params.push(linkedin_url);
-      idx++;
-    }
-    if (Object.prototype.hasOwnProperty.call(req.body, 'twitter_url')) {
-      updates.push(`twitter_url = $${idx}`);
-      params.push(twitter_url);
-      idx++;
-    }
     params.push(req.user.id);
     const { rows } = await query(
-      `UPDATE users SET ${updates.join(', ')} WHERE id = $${params.length} RETURNING id, email, name, plan, hourly_rate, timezone, avatar_url, studio_name, github_url, linkedin_url, twitter_url`,
+      `UPDATE users SET ${updates.join(', ')} WHERE id = $${params.length} RETURNING id, email, name, plan, hourly_rate, timezone, avatar_url, studio_name`,
       params
     );
     return res.json({ user: rows[0] });
